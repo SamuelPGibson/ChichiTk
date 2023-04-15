@@ -454,13 +454,14 @@ class PlayerButtons(Frame):
         previous_button = IconButton(self, os.path.join(image_path, "skip_back.png"),
                                      previous_function, popup_label='Skip to Start',
                                      selectable=False, **bkwargs)
-        back_button = IconButton(self, os.path.join(image_path, "replay5.png"), step_back_function,
-                                 popup_label='Back 5 Seconds', selectable=False,
-                                 **bkwargs)
+        back_button = IconButton(self, os.path.join(image_path, "replay5.png"),
+                                 step_back_function, popup_label='Back 5 Seconds',
+                                 selectable=False, **bkwargs)
         self.play_button = DoubleIconButton(self, os.path.join(image_path, "play.png"),
-                                            os.path.join(image_path, "pause.png"), play_function,
-                                            stop_function, popup_label1='Play',
-                                            popup_label2='Pause', **bkwargs)
+                                            os.path.join(image_path, "pause.png"),
+                                            play_function, stop_function,
+                                            popup_label1='Play', popup_label2='Pause',
+                                            **bkwargs)
         forward_button = IconButton(self, os.path.join(image_path, "forward5.png"),
                                     step_forward_function, popup_label='Forward 5 Seconds',
                                     selectable=False, **bkwargs)
