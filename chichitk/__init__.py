@@ -17,3 +17,6 @@ from .temp_menu import *
 from .text_boxes import *
 from .timer import *
 from .tool_tip import *
+
+# not importing from .canvas_items because these are not intended
+# to be used outside of chichitk
