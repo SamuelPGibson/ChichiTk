@@ -15,7 +15,7 @@ setup(
     name="chichitk",
     version=VERSION,
     author="Samuel Gibson",
-    author_email="<samuel.gibson12@gmail.com>",
+    author_email="<samuelpgibson12@gmail.com>",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=long_description,
