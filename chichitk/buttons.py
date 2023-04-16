@@ -384,6 +384,7 @@ class LabelButton(BaseButton):
     def __init__(self, master, command, label:str='', **kwargs):
         '''just like IconButton but with no icon'''
         BaseButton.__init__(self, master, command, **kwargs)
+        self.label_text = label
         self.label = Label(self, text=label, font=(self.font_name, self.font_size), bd=0)
         self.label.pack(side='top', padx=self.padx, pady=self.pady)
         self.label.bind("<Button-1>", self.click_button)
@@ -400,6 +401,10 @@ class LabelButton(BaseButton):
         self.config(bg=bg)
         self.bar.config(bg=bar_color)
         self.label.config(bg=bg, fg=fg)
+
+    def get_text(self):
+        '''returns label text'''
+        return self.label_text
 
 class ToggleLabelButton(LabelButton):
     ''' Extension of LabelButton that passes a boolean argument to callback
