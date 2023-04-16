@@ -772,9 +772,12 @@ class PlotScrollBar(Canvas):
                                        left_drag_function=self.active_drag0, right_drag_function=self.active_drag1,
                                        box_drag_function=self.active_drag, brighten_fact=0, raise_on_click=False,
                                        active=active and self.active_fill)
-        self.Line = CanvasEditLine(self, 0, 0, self.label_line_height, width=6, bg=self.inactive_color, drag_color=self.active_color,
-                                   hover_color=self.hover_color, selectable=False, hoverable=True, draggable=True, show_drag_color=True,
-                                   drag_function=self.main_drag, active=active)
+        self.Line = CanvasEditLine(self, 0, 0, self.label_line_height, width=6,
+                                   bg=self.inactive_color, drag_color=self.active_color,
+                                   hover_color=self.hover_color, selectable=False,
+                                   hoverable=True, draggable=True, deletable=False,
+                                   show_drag_color=True, drag_function=self.main_drag,
+                                   active=active)
 
         self.bind('<Configure>', self.frame_width)
         self.bind('<MouseWheel>', self.mouse_wheel_scroll)

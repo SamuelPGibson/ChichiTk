@@ -31,8 +31,8 @@ class CanvasEditLine():
                  hoverable:bool=True, draggable:bool=True, show_drag_color=False,
                  drag_function=None, self_select_function=None, self_delete_function=None,
                  always_deselect:bool=False, menu_font_name='Segoe UI', menu_font_size=11,
-                 double_click_to_delete:bool=True, active=True, tag_name:str='tag',
-                 state:str='normal'):
+                 double_click_to_delete:bool=True, deletable=True, active=True,
+                 tag_name:str='tag', state:str='normal'):
         '''        
         Parameters
         ----------
@@ -58,6 +58,7 @@ class CanvasEditLine():
             :param self_delete_function: 1 argument function (self) - called when item is self deleted (with popup menu)
             :param self_select_function: 1 argument function (self) - called when item is self selected (selected by clicking on Item)
             :param always_deselect: bool - if True, will deselect upon command even if cursor is hovering
+            :param deletable: bool - if True, line can be deleted from right-click popup menu
             :param active: bool - if False, CanvasEditFill will be unresponsive to user actions, regardless of other settings - for toggling
             :param tag_name: str - tag name given to all canvas items - should be general for items of guitar track, chords track, etc
             :param state: str - state in canvas when item is created - options: ['normal', 'hidden', 'disabled']
@@ -88,10 +89,11 @@ class CanvasEditLine():
             self.canvas.tag_bind(self.id, '<ButtonRelease-1>', self.release)
             self.canvas.tag_bind(self.id, '<B1-Motion>', self.drag)
 
-        self.menu = Menu(canvas, tearoff=False, bg='#000000', fg='#ffffff',
-                         activebackground='#222222', font=(menu_font_name, menu_font_size))
-        self.menu.add_command(label="Delete", command=self.self_delete)
-        self.canvas.tag_bind(self.id, "<Button-3>", self.right_click)
+        if deletable:
+            self.menu = Menu(canvas, tearoff=False, bg='#000000', fg='#ffffff',
+                            activebackground='#222222', font=(menu_font_name, menu_font_size))
+            self.menu.add_command(label="Delete", command=self.self_delete)
+            self.canvas.tag_bind(self.id, "<Button-3>", self.right_click)
         if double_click_to_delete:
             self.canvas.tag_bind(self.id, "<Double-Button-1>", self.self_delete)
 
