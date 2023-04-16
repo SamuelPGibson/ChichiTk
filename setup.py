@@ -20,7 +20,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
-    install_requires=['opencv-python', 'numpy', 'Pillow', 'fitz'],
+    install_requires=['opencv-python', 'numpy', 'Pillow', 'PyMuPDF'],
     keywords=['python', 'tkinter', 'custom', 'widgets'],
     classifiers=[
         "Development Status :: 3 - Alpha",

@@ -1,6 +1,6 @@
 from tkinter import Toplevel, Frame, Label, Text, Scrollbar, PhotoImage
 from threading import Thread
-import fitz
+import fitz # fitz is included in PyMuPDF
 import os
 
 from .buttons import IconButton
