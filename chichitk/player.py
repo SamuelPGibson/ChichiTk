@@ -155,6 +155,7 @@ class Player(Frame):
             self.__Timer.reset()
             self.__Timer.start()
         else: # no loop - actually stopping
+            self.__Buttons.to_play()
             if self.__end_callback is not None:
                 self.__end_callback()
     

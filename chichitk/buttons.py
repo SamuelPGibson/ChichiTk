@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 from tkinter import Frame, Button, Label
 
 from .tool_tip import ToolTip
+from .icons import icons
 
 
 def hex_to_rgb(hex_code:str):
@@ -176,10 +177,10 @@ class IconButton(BaseButton):
         '''
         Parameters
         ----------
-            master : frame in which to put button
-            icon_path : str - path to .png file
-            click_command : 0 argument function - function to be executed when button is clicked
-            bar_height : Int - height of bar at the bottom of button
+            :param master: frame in which to put button
+            :param icon_path: str or np.array - path to .png file or image array
+            :param click_command: 0 argument function - function to be executed when button is clicked
+            :param bar_height: Int - height of bar at the bottom of button
         '''
         BaseButton.__init__(self, master, command, bar_height=bar_height, **kwargs) # bar already packed buttom
         self.icon_frame = Frame(self)
@@ -192,9 +193,19 @@ class IconButton(BaseButton):
         self.icon_frame.bind("<Button-1>", self.click_button)
         self.label.bind("<Button-1>", self.click_button)
         
+        # Load icon
+        if isinstance(icon_path, str): # path to image
+            assert len(icon_path) > 4, f'Invalid path: {icon_path}'
+            assert icon_path[-4:] == '.png', f'icon_path is not a .png file: {icon_path}'
+            assert os.path.exists(icon_path), f'Path to .png file does not exist: {icon_path}'
+            self.base_img = cv2.imread(icon_path)
+        elif isinstance(icon_path, np.ndarray): # 3d numpy array
+            self.base_img = icon_path
+        else:
+            raise TypeError(f'Invalid icon input to IconButton: {icon_path}')
+
         # Create Icons
         self.images = [[None, None], [None, None]]
-        self.base_img = cv2.imread(icon_path)
         for x, y in [[0, 0], [0, 1], [1, 0], [1, 1]]:
             temp_img = image_replace_colors(self.base_img.copy(), [('#ffffff', self.fg_colors[x][y]), ('#000000', self.bg_colors[x][y])])
             self.images[x][y] = ImageTk.PhotoImage(image=Image.fromarray(temp_img), master=self.icon_frame)
@@ -364,10 +375,7 @@ class CheckButton(DoubleIconButton):
             :param inactive_popup_label: str or None - hover popup text when button is not selected
             :param active: bool - initial status of CheckButton
         '''
-        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
-        path1 = os.path.join(image_path, "box.png")
-        path2 = os.path.join(image_path, "checkbox.png")
-        DoubleIconButton.__init__(self, master, path1, path2,
+        DoubleIconButton.__init__(self, master, icons['box'], icons['checkbox'],
                                   lambda: command(True), lambda: command(False),
                                   label1=label, label2=label,
                                   popup_label1=inactive_popup_label,
@@ -470,26 +478,24 @@ class PlayerButtons(Frame):
                    'inactive_hover_fg':hover_fg , 'padx':button_padx}
         
         # Create buttons
-        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
         self.buttons: list[IconButton] = []
-        previous_button = IconButton(self, os.path.join(image_path, "skip_back.png"),
-                                     previous_function, popup_label='Skip to Start',
+        previous_button = IconButton(self, icons['skip_back'], previous_function,
+                                     popup_label='Skip to Start',
                                      selectable=False, **bkwargs)
-        back_button = IconButton(self, os.path.join(image_path, "replay5.png"),
-                                 step_back_function, popup_label='Back 5 Seconds',
+        back_button = IconButton(self, icons['replay5'], step_back_function,
+                                 popup_label='Back 5 Seconds',
                                  selectable=False, **bkwargs)
-        self.play_button = DoubleIconButton(self, os.path.join(image_path, "play.png"),
-                                            os.path.join(image_path, "pause.png"),
+        self.play_button = DoubleIconButton(self, icons['play'], icons['pause'],
                                             play_function, stop_function,
                                             popup_label1='Play', popup_label2='Pause',
                                             **bkwargs)
-        forward_button = IconButton(self, os.path.join(image_path, "forward5.png"),
-                                    step_forward_function, popup_label='Forward 5 Seconds',
+        forward_button = IconButton(self, icons['forward5'], step_forward_function,
+                                    popup_label='Forward 5 Seconds',
                                     selectable=False, **bkwargs)
-        next_button = IconButton(self, os.path.join(image_path, "skip_forward.png"),
+        next_button = IconButton(self, icons['skip_forward'],
                                  next_function, popup_label='Skip to End',
                                  selectable=False, **bkwargs)
-        self.loop_button = ToggleIconButton(self, os.path.join(image_path, "loop.png"),
+        self.loop_button = ToggleIconButton(self, icons['loop'],
                                             popup_label='Toggle Loop',
                                             active_bg=bg, active_fg=active_icon_color,
                                             active_hover_fg=hover_fg, **bkwargs)

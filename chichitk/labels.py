@@ -1,8 +1,8 @@
-import os
 from tkinter import Label, Frame
 
 from .entry_boxes import CheckEntry
 from .buttons import IconButton
+from .icons import icons
 
 
 class EditLabel(Frame):
@@ -167,14 +167,12 @@ class NumberIncrementLabel(Frame):
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=0)
 
-        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
-
-        minus_button = IconButton(self, os.path.join(image_path, "minus.png"),
+        minus_button = IconButton(self, icons['minus'],
                                   self.minus, selectable=False,
                                   bar_height=0, popup_label='-1', inactive_bg=bg,
                                   inactive_hover_fg=fg, inactive_fg=fg,
                                   inactive_hover_bg=hover_bg)
-        plus_button = IconButton(self, os.path.join(image_path, "plus.png"),
+        plus_button = IconButton(self, icons['plus'],
                                  self.plus, selectable=False,
                                  bar_height=0, popup_label='+1', inactive_bg=bg,
                                  inactive_hover_fg=fg, inactive_fg=fg,

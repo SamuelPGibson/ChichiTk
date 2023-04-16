@@ -1,9 +1,9 @@
 from tkinter import Toplevel, Frame, Label, Text, Scrollbar, PhotoImage
 from threading import Thread
 import fitz # fitz is included in PyMuPDF
-import os
 
 from .buttons import IconButton
+from .icons import icons
 
 
 class PdfDisplay(Frame):
@@ -41,11 +41,8 @@ class PdfDisplay(Frame):
         # Buttons Frame
         self.buttons_frame = Frame(self, bg='#ffffff')
 
-        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
-
         if new_window_option:
-            new_button = IconButton(self.buttons_frame,
-                                    os.path.join(image_path, "open_in_new.png"),
+            new_button = IconButton(self.buttons_frame, icons['open_in_new'],
                                     command=self.open_in_window, bar_height=0,
                                     selectable=False, inactive_bg='#ffffff',
                                     inactive_hover_fg=None, popup_bg=self.bg,
@@ -53,12 +50,12 @@ class PdfDisplay(Frame):
             new_button.pack(side='left')
 
         if zoom_options:
-            out_button = IconButton(self.buttons_frame, os.path.join(image_path, "minus.png"),
+            out_button = IconButton(self.buttons_frame, icons['minus'],
                                     command=self.zoom_out, bar_height=0,
                                     selectable=False, inactive_bg='#ffffff',
                                     inactive_hover_fg=None, popup_bg=self.bg,
                                     popup_label='Zoom Out')
-            in_button = IconButton(self.buttons_frame, os.path.join(image_path, "plus.png"),
+            in_button = IconButton(self.buttons_frame, icons['plus'],
                                    command=self.zoom_in, bar_height=0,
                                    selectable=False, inactive_bg='#ffffff',
                                    inactive_hover_fg=None, popup_bg=self.bg,

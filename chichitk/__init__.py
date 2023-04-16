@@ -20,3 +20,5 @@ from .tool_tip import *
 
 # not importing from .canvas_items because these are not intended
 # to be used outside of chichitk
+
+# not importing from .icons because this just contains icons as arrays

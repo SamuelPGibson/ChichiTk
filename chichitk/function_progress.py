@@ -3,6 +3,7 @@ from tkinter import Frame, Label
 
 from .progress_bar import ProgressBar
 from .buttons import IconButton
+from .icons import icons
 
 
 class FunctionProgress(Frame):
@@ -45,12 +46,9 @@ class FunctionProgress(Frame):
         inactive_color = inactive_color if inactive_color else bg
         self.complete = False
 
-        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
-        icon_path = os.path.join(image_path, "file_upload.png")
-
         self.main_frame = Frame(self, bg=bg)
         self.main_frame.pack(side='top', fill='both', expand=True)
-        button = IconButton(self.main_frame, icon_path, command, label=label,
+        button = IconButton(self.main_frame, icons['edit'], command, label=label,
                             selectable=False, inactive_bg=bg, bar_height=2)
         button.pack(side='left', fill='both', expand=True)
         self.indicator = Label(self.main_frame, text=' ' * 3, bg=self.inactive_bg,

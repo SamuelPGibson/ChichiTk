@@ -3,6 +3,7 @@ from tkinter import Frame, Label, filedialog
 import os
 
 from .buttons import IconButton
+from .icons import icons
 
 
 class FileDialog(Frame):
@@ -44,14 +45,11 @@ class FileDialog(Frame):
         self.file_active_fg, self.file_inactive_fg = file_active_fg, file_inactive_fg
         self.__filetypes = [(f'{t.upper()} Files', f'*.{t}') for t in file_types] + [('All Files', '*.*')]
 
-        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
-        icon_path = os.path.join(image_path, "file_upload.png")
-
         if row != None:
             file_label = Label(master, text=label, bg=bg, fg=fg,
                                font=(label_font_name, label_font_size))
             file_label.grid(row=row, column=start_col, padx=padx, pady=pady, sticky='nsew')
-            load_button = IconButton(master, icon_path, self.browse_file,
+            load_button = IconButton(master, icons['file_upload'], self.browse_file,
                                      popup_label='Upload File', selectable=False,
                                      bar_height=0, inactive_bg=bg)
             load_button.grid(row=row, column=start_col + 1, padx=padx, pady=pady, sticky='nsew')
@@ -63,7 +61,7 @@ class FileDialog(Frame):
             file_label = Label(self, text=label, bg=bg, fg=fg,
                                font=(label_font_name, label_font_size))
             file_label.pack(side='left', fill='x', expand=True)
-            load_button = IconButton(self, icon_path, self.browse_file,
+            load_button = IconButton(self, icons['file_upload'], self.browse_file,
                                      popup_label='Upload File', selectable=False,
                                      bar_height=0, inactive_bg=bg)
             load_button.pack(side='right')
