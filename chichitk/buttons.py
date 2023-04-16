@@ -434,19 +434,35 @@ class PlayerButtons(Frame):
             '''
     def __init__(self, master, bg, play_function, stop_function, step_forward_function,
                  step_back_function, next_function, previous_function,
-                 active_icon_color='#ffffff', button_bar_height=0,
-                 button_padx=7, active=True):
-        '''buttons to control playback of MusicPlayer or VideoPlayer'''
+                 active_icon_color='#ffffff', hover_fg='#aaaaaa',
+                 button_padx=6, padx_weight=6, active=True):
+        '''
+        Parameters
+        ----------
+            :param master: tk.Frame - parent widget
+            :param bg: str (hex code) - background color
+            :param play_function: function () - called when play button is clicked
+            :param stop_function: function () - called when stop button is clicked
+            :param step_forward_function: function () - called when step_forward button is clicked
+            :param step_back_function: function () - called when step_back button is clicked
+            :param next_function: function () - called when next button is clicked
+            :param previous_function: function () - called when previous button is clicked
+            :param active_icon_color: str (hex code) - color of loop button when selected
+            :param hover_fg: str (hex code) - color of buttons when cursor is hovering
+            :param button_padx: int (pixels) - minimum distance between buttons
+            :param padx_weight: int - weight of x padding for button group
+            :param active: bool - if True, buttons are interactable by default
+        '''
         Frame.__init__(self, master, bg=bg)
         # for x padding so that buttons dont span full width of frame
-        self.grid_columnconfigure(0, weight=6)
-        self.grid_columnconfigure(7, weight=6)
+        self.grid_columnconfigure(0, weight=padx_weight)
+        self.grid_columnconfigure(7, weight=padx_weight)
         for i in range(6):
             self.grid_columnconfigure(i + 1, weight=1)
         
         # key-word arguments common to all buttons
-        bkwargs = {'bar_height':button_bar_height, 'inactive_bg':bg,
-                   'padx':button_padx}
+        bkwargs = {'bar_height':0, 'inactive_bg':bg,
+                   'inactive_hover_fg':hover_fg , 'padx':button_padx}
         
         # Create buttons
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "icons")
@@ -470,10 +486,8 @@ class PlayerButtons(Frame):
                                  selectable=False, **bkwargs)
         self.loop_button = ToggleIconButton(self, os.path.join(image_path, "loop.png"),
                                             popup_label='Toggle Loop',
-                                            bar_height=button_bar_height,
-                                            active_bg=bg, inactive_bg=bg,
-                                            active_fg=active_icon_color,
-                                            padx=button_padx)
+                                            active_bg=bg, active_fg=active_icon_color,
+                                            active_hover_fg=hover_fg, **bkwargs)
 
         # Grid buttons
         for i, button in enumerate([previous_button, back_button, self.play_button,
@@ -497,10 +511,12 @@ class PlayerButtons(Frame):
         self.play_button.switch1()
 
     def turn_on(self):
+        '''make buttons interactable by user'''
         for button in self.buttons:
             button.turn_on()
 
     def turn_off(self):
+        '''make buttons uninteractable by user'''
         for button in self.buttons:
             button.turn_off()
 

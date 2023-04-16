@@ -18,7 +18,7 @@ class Player(Frame):
                  slider_type:str='single', frame_num=1000, frame_rate=29.97,
                  step_increment:int=150, end_callback=None, start_callback=None,
                  stop_callback=None, skip_callback=None, buttons_on_top=False,
-                 value_display_fact=1):
+                 buttons_padx_weight=6, value_display_fact=1):
         ''' Only keeps track of the current frame using Timer
 
         Parameters
@@ -38,6 +38,7 @@ class Player(Frame):
             :param stop_callback: function () - called when timer is stopped
             :param skip_callback: function (current_step) - called when step is incremented
             :param buttons_on_top: bool - True to put buttons on top, or False for bottom
+            :param buttons_padx_weight: int - weight of padding for PlayerButtons
             :param value_display_fact: int - pushed only to SimpleScrollBar
         '''
         self.__callback = callback
@@ -72,7 +73,8 @@ class Player(Frame):
 
         self.__Buttons = PlayerButtons(self, bg, self.__Timer.start, self.__Timer.stop,
                                        self.step_forward, self.step_back,
-                                       self.__Timer.to_end, self.__Timer.reset)
+                                       self.__Timer.to_end, self.__Timer.reset,
+                                       padx_weight=buttons_padx_weight)
         self.__Buttons.pack(side=buttons_side, fill='x')
 
     def start(self):
@@ -155,4 +157,4 @@ class Player(Frame):
         else: # no loop - actually stopping
             if self.__end_callback is not None:
                 self.__end_callback()
-        
+    
