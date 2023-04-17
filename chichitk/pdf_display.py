@@ -1,6 +1,9 @@
 from tkinter import Toplevel, Frame, Label, Text, Scrollbar, PhotoImage
 from threading import Thread
-import fitz # fitz is included in PyMuPDF
+
+# chichitk depends on an older version of PyMuPDF: PyMuPDF==1.19.5
+# fitz is PyMuPDF
+import fitz
 
 from .buttons import IconButton
 from .icons import icons
