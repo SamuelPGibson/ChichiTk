@@ -7,7 +7,7 @@ authors = [
 description = "Python UI library built upon Tkinter"
 readme = "Readme.md"
 requires-python = ">=3.7"
-install_requires=["opencv-python", "numpy", "Pillow", "PyMuPDF"],
+install_requires=["opencv-python", "numpy", "Pillow", "PyMuPDF==1.19.5"],
 keywords=["python", "tkinter", "custom", "widgets"]
 classifiers = [
     "Development Status :: 3 - Alpha",
