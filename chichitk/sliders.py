@@ -1121,7 +1121,8 @@ class DoubleScrollBar(Frame):
                                            font_name=font_name, label_font_size=label_font_size,
                                            tick_font_size=tick_font_size, active=active,
                                            confine_to_active_region=confine_to_active_region,
-                                           active_fill_callback=fill_callback)
+                                           active_fill_callback=fill_callback,
+                                           frame_rate=self.frame_rate)
         self.SecondaryScrollBar = PlotScrollBar(self, self.__secondary_command,
                                                 label, frames=self.MainScrollBar.active_x1,
                                                 min_frame=self.MainScrollBar.active_x0,
@@ -1132,7 +1133,8 @@ class DoubleScrollBar(Frame):
                                                 show_fill=False, active_fill=False,
                                                 mouse_wheel_steps=mouse_wheel_steps,
                                                 font_name=font_name, label_font_size=label_font_size,
-                                                tick_font_size=tick_font_size, active=active)
+                                                tick_font_size=tick_font_size, active=active,
+                                                frame_rate=self.frame_rate)
         self.MainScrollBar.pack(side='top', fill='x')
         self.SecondaryScrollBar.pack(side='top', fill='x')
 
