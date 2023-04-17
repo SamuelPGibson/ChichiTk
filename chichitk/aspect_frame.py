@@ -12,6 +12,9 @@ class AspectFrame(Frame):
         expand=True, and grid with sticky='nsew'
 
         DO NOT use AspectFrame.place() because then AspectFrame will not work
+
+        AspectFrame should ALWAYS be packed with expand=True and grid with
+        sticky='nsew' and parent widget gridrowconfigure and gridcolumnconfigure
     '''
     def __init__(self, master, aspect_ratio:float, pad_bg:str='#ffffff',
                  frame_bg:str='#ffffff', config_callback:callable=None,
