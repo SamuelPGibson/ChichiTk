@@ -8,7 +8,7 @@ from .entry_boxes import *
 from .file_dialog import *
 from .function_progress import *
 from .labels import *
-from .pdf_display import *
+from .pdf_display import PdfDisplay
 from .player import *
 from .progress_bar import *
 from .scrollable_frame import *
