@@ -750,8 +750,6 @@ class PlotScrollBar(Canvas):
         self.height, self.padx = height, padx
         self.active_color, self.inactive_color, self.hover_color = active_color, inactive_color, hover_color
         self.font_name, self.label_font_size, self.tick_font_size = font_name, label_font_size, tick_font_size
-        self.label_line_id, self.x_label_id, self.width = [None] * 3
-        self.ticks, self.labels = [], []
         self.show_fill, self.active_fill = show_fill, active_fill
         self.confine_to_active_region = confine_to_active_region
         self.hovering, self.dragging = False, False
@@ -759,6 +757,7 @@ class PlotScrollBar(Canvas):
         self.active_x0, self.active_x1 = active_x0, active_x1 # frames
         self.current_frame, self.min_frame, self.max_frame = start_frame, min_frame, frames
         self.min_seconds, self.max_seconds = self.min_frame / frame_rate, self.max_frame / frame_rate
+        self.width = None
         if self.label:
             self.label_line_height, self.tick_height = height * 0.5, height * 0.59
         else:
@@ -1027,18 +1026,10 @@ class PlotScrollBar(Canvas):
 
     def remove(self):
         '''removes all labels and ticks from the x axis'''
-        if self.label_line_id:
-            self.delete(self.label_line_id)
-            self.label_line_id = None
-        if self.x_label_id:
-            self.delete(self.x_label_id)
-            self.x_label_id = None
-        for id in self.ticks:
-            self.delete(id)
-        self.ticks = []
-        for id in self.labels:
-            self.delete(id)
-        self.labels = []
+        # deletes everything except line and active fill
+        for i in self.find_all():
+            if i != self.Line.id and (not self.show_fill or i != self.Fill.box_id):
+                self.delete(i)
 
     def draw(self, max_ticks=15, tick_x_buffer=0.01):
         '''draws label line and ticks/labels on canvas
@@ -1049,11 +1040,12 @@ class PlotScrollBar(Canvas):
         self.remove()
         self.update_line_x()
         self.update_fill_x(callback=False)
-        self.label_line_id = self.create_line(self.xmin, self.label_line_height, self.xmax,
-                                                self.label_line_height, fill='#ffffff', width=1)
+        self.create_line(self.xmin, self.label_line_height, self.xmax,
+                         self.label_line_height, fill='#ffffff', width=1)
         if self.label != None:
-            self.x_label_id = self.create_text(self.width / 2, self.height, text=self.label, fill='#ffffff',
-                                                font=(self.font_name, self.label_font_size), anchor='s')
+            self.create_text(self.width / 2, self.height, text=self.label,
+                             fill='#ffffff', font=(self.font_name, self.label_font_size),
+                             anchor='s')
         
         # draw ticks and labels
         increment = self.divisions[self.divisions > (self.max_seconds - self.min_seconds) / max_ticks].min()
@@ -1061,9 +1053,10 @@ class PlotScrollBar(Canvas):
         for sec, label in zip(ticks, [seconds_text(t) for t in ticks]):
             x = self.xmin + (self.xmax - self.xmin) * (sec - self.min_seconds) / (self.max_seconds - self.min_seconds)
             if x + (self.xmax - self.xmin) * tick_x_buffer >= self.xmin and x - (self.xmax - self.xmin) * tick_x_buffer <= self.xmax:
-                self.ticks.append(self.create_line(x, self.label_line_height, x, self.tick_height, fill='#ffffff', width=1))
-                self.labels.append(self.create_text(x, self.tick_height, text=label, fill='#ffffff',
-                                                    font=(self.font_name, self.tick_font_size), anchor='n'))
+                self.create_line(x, self.label_line_height, x, self.tick_height,
+                                 fill='#ffffff', width=1)
+                self.create_text(x, self.tick_height, text=label, fill='#ffffff',
+                                 font=(self.font_name, self.tick_font_size), anchor='n')
 
 class DoubleScrollBar(Frame):
     ''' Extension of PlotScrollBar that combines to PlotScrollBars to give user
