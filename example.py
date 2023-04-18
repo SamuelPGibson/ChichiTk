@@ -196,7 +196,7 @@ application.'''
 
 colors = {0:'#1e1e22', 1:'#232328', 2:'#28282e'}
 
-app = Tk()  # create CTk window like you do with the Tk window
+app = Tk()
 app.title('ChichiTk Example App')
 app.config(bg=colors[0])
 sw, sh = app.winfo_screenwidth(), app.winfo_screenheight()
