@@ -1,13 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "chichitk"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   { name="Samuel Gibson", email="samuelpgibson12@gmail.com" },
 ]
 description = "Python UI library built upon Tkinter"
 readme = "Readme.md"
 requires-python = ">=3.7"
-install_requires=["opencv-python", "numpy", "Pillow", "PyMuPDF"]
+dependencies = ["opencv-python", "numpy", "Pillow", "PyMuPDF"]
 keywords=["python", "tkinter", "custom", "widgets"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -17,6 +21,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[tool.setuptools.packages.find]
+include = ["chichitk*"]  # package names should match these glob patterns (["*"] by default)
+exclude = ["chichitk_env*", "documentation_images*", "example.pdf", "example.docx", "example.py", "stopwatch_example.py"]
+
 [project.urls]
 "Homepage" = "https://github.com/SamGibson1/ChichiTk"
+"Documentation" = "https://github.com/SamGibson1/ChichiTk/wiki"
 "Bug Tracker" = "https://github.com/SamGibson1/ChichiTk/issues"
