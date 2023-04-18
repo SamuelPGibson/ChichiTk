@@ -33,7 +33,7 @@ from tkinter import Tk, Frame
 
 ```
 This results in the following window on Windows:
-<img src="documentation_images/single_button_macOS.png" width="400"/>
+<img src="documentation_images/example_app.jpg" width="600"/>
 
 ## Sample Application - Password Manager
 Video here showing password manager and link to git repo for password manager
