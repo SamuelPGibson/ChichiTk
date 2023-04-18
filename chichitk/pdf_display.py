@@ -13,7 +13,8 @@ class PdfDisplay(Frame):
     '''
     def __init__(self, master, bg, fg, font_name:str='Segoe UI', font_size:int=20,
                  button_pad:int=2, view_width=75, zoom_fact=1, height:int=600,
-                 buttons_side='left', new_window_option=True, zoom_options=True):
+                 buttons_side='left', buttons_bg='#ffffff',
+                 new_window_option=True, zoom_options=True):
         '''
         
         Parameters
@@ -27,6 +28,7 @@ class PdfDisplay(Frame):
             :param view_width: int - width of view in pixels
             :param zoom_fact: float - factor by which to zoom pdf
             :param buttons_side: str - Literal['left', 'right']
+            :param buttons_bg: str (hex code) - background color of buttons
             :param new_window_option: bool - if True, include button to open in new window
         '''
         assert buttons_side in ['left', 'right'], f"Invalid buttons side: '{buttons_side}', must be 'left' or 'right'"
@@ -47,7 +49,7 @@ class PdfDisplay(Frame):
         if new_window_option:
             new_button = IconButton(self.buttons_frame, icons['open_in_new'],
                                     command=self.open_in_window, bar_height=0,
-                                    selectable=False, inactive_bg='#ffffff',
+                                    selectable=False, inactive_bg=buttons_bg,
                                     inactive_hover_fg=None, popup_bg=self.bg,
                                     popup_label='Open In New Window')
             new_button.pack(side=buttons_side)
@@ -55,12 +57,12 @@ class PdfDisplay(Frame):
         if zoom_options:
             out_button = IconButton(self.buttons_frame, icons['minus'],
                                     command=self.zoom_out, bar_height=0,
-                                    selectable=False, inactive_bg='#ffffff',
+                                    selectable=False, inactive_bg=buttons_bg,
                                     inactive_hover_fg=None, popup_bg=self.bg,
                                     popup_label='Zoom Out')
             in_button = IconButton(self.buttons_frame, icons['plus'],
                                    command=self.zoom_in, bar_height=0,
-                                   selectable=False, inactive_bg='#ffffff',
+                                   selectable=False, inactive_bg=buttons_bg,
                                    inactive_hover_fg=None, popup_bg=self.bg,
                                    popup_label='Zoom In')
             out_button.pack(side='left')
