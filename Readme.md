@@ -5,7 +5,7 @@ ChichiTk is a python UI library built upon Tkinter, which implements affectedly 
 ![](documentation_images/example_app.jpg)
 | _`example.py` on Windows_
 
-**video here**
+https://user-images.githubusercontent.com/74847576/232877538-c069685a-3265-42d0-9961-73ccd59c9738.mp4
 | _`example.py` on Windows - sample user interactions_
 
 ## Installation
