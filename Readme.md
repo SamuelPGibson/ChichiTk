@@ -1,6 +1,6 @@
 # ChichiTk
 
-A python UI library built upon Tkinter, which implements affectedly elegant extensions of existing tkinter widgets. ChichiTk facilitates easy implementation of dropdown menus, nested dropdown menus, progress bars, sliders, icon buttons, and more. CheckEntry and TextBox widgets can execute a callback function whenever their text is edited by the user. ChichiTk AspectFrame retains a specific aspect ratio as flexible frames are resized. ChichiTk ScrollableFrame can contain tkinter elements in a scrollable widget. For exhaustive list of features, visit the wiki tab.
+A python UI library built upon Tkinter, which implements affectedly elegant extensions of existing tkinter widgets. ChichiTk facilitates easy implementation of dropdown menus, nested dropdown menus, progress bars, sliders, icon buttons, and more. CheckEntry and TextBox widgets can execute a callback function whenever their text is edited by the user. ChichiTk AspectFrame retains a specific aspect ratio as flexible frames are resized. ChichiTk ScrollableFrame can contain tkinter elements in a scrollable widget. For exhaustive list of features, visit the **--> [wiki tab](https://github.com/SamGibson1/ChichiTk/wiki)**.
 
 ![](documentation_images/example_app.jpg)
 | _`example.py` on Windows_
