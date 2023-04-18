@@ -1,6 +1,6 @@
 # ChichiTk
 
-ChichiTk is a python UI library built upon Tkinter, which implements affectedly elegant extensions of existing tkinter widgets. Further description...
+A python UI library built upon Tkinter, which implements affectedly elegant extensions of existing tkinter widgets. ChichiTk facilitates easy implementation of dropdown menus, nested dropdown menus, progress bars, sliders, icon buttons, and more. CheckEntry and TextBox widgets can execute a callback function whenever their text is edited by the user. ChichiTk AspectFrame retains a specific aspect ratio as flexible frames are resized. ChichiTk ScrollableFrame can contain tkinter elements in a scrollable widget. For exhaustive list of features, visit the wiki tab.
 
 ![](documentation_images/example_app.jpg)
 | _`example.py` on Windows_
@@ -55,8 +55,8 @@ Play.pack(side='bottom', fill='x')
 
 app.mainloop()
 ```
-This results in the following window on Windows:
+This results in the following window:
 <img src="documentation_images/stopwatch_example.jpg" width="600"/>
 
-## Sample Application - Password Manager
+## Example Application - Password Manager
 Video here showing password manager and link to git repo for password manager
