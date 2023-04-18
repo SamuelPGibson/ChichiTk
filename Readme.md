@@ -28,13 +28,35 @@ The **official** documentation can be found in the Wiki Tab here:
 ## Example Program
 The following is a simple Stopwatch program that uses chichitk.Player to manage callbacks:
 ```python
-from tkinter import Tk, Frame
+from tkinter import Tk, Frame, Label
+from chichitk import Player
 
-# code here
+def time_text(time:int, f:int=100):
+    hour = time // (3600 * f)
+    minute = (time % (3600 * f)) // (60 * f)
+    second = (time % (60 * f)) // f
+    return f'{hour:0>2}:{minute:0>2}:{second:0>2}.{time % f:0>2}'
 
+app = Tk()
+app.title('Stopwatch')
+app.config(bg='#28282e')
+app.geometry("650x400")
+
+frame = Frame(app)
+frame.place(relx=0.5, rely=0.5, relwidth=0.8, relheight=0.6, anchor='center')
+
+label = Label(frame, text='00:00:00.00', bg='#232328', fg='#ffffff',
+              font=('Segoe UI bold', 30))
+label.pack(fill='both', expand=True)
+
+Play = Player(frame, lambda t: label.config(text=time_text(t)), 0.01,
+              bg='#1e1e22', frame_num=12001, frame_rate=100, step_increment=500)
+Play.pack(side='bottom', fill='x')
+
+app.mainloop()
 ```
 This results in the following window on Windows:
-<img src="documentation_images/example_app.jpg" width="600"/>
+<img src="documentation_images/stopwatch_example.jpg" width="600"/>
 
 ## Sample Application - Password Manager
 Video here showing password manager and link to git repo for password manager
