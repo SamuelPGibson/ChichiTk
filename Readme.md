@@ -6,6 +6,7 @@ ChichiTk is a python UI library built upon Tkinter, which implements affectedly 
 | _`example.py` on Windows_
 
 https://user-images.githubusercontent.com/74847576/232877538-c069685a-3265-42d0-9961-73ccd59c9738.mp4
+
 | _`example.py` on Windows - sample user interactions_
 
 ## Installation
