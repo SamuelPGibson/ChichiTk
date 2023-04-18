@@ -1,5 +1,6 @@
-from tkinter import Toplevel, Frame, Label, Text, Scrollbar, PhotoImage
+from tkinter import Toplevel, Frame, Label, Text, Scrollbar, PhotoImage, filedialog
 from threading import Thread
+import shutil # for copying files
 import fitz # fitz is PyMuPDF
 
 from .buttons import IconButton
@@ -14,7 +15,7 @@ class PdfDisplay(Frame):
     def __init__(self, master, bg, fg, font_name:str='Segoe UI', font_size:int=20,
                  button_pad:int=2, view_width=75, zoom_fact=1, height:int=600,
                  buttons_side='left', buttons_bg='#ffffff',
-                 new_window_option=True, zoom_options=True):
+                 new_window_option=True, download_option=True, zoom_options=True):
         '''
         
         Parameters
@@ -30,6 +31,8 @@ class PdfDisplay(Frame):
             :param buttons_side: str - Literal['left', 'right']
             :param buttons_bg: str (hex code) - background color of buttons
             :param new_window_option: bool - if True, include button to open in new window
+            :param download_option: bool - if True, include button to download pdf
+            :param zoom_options: bool - if True, include buttons to zoom pdf
         '''
         assert buttons_side in ['left', 'right'], f"Invalid buttons side: '{buttons_side}', must be 'left' or 'right'"
         Frame.__init__(self, master, bg=bg)
@@ -46,25 +49,28 @@ class PdfDisplay(Frame):
         # Buttons Frame
         self.buttons_frame = Frame(self, bg='#ffffff')
 
+        bkwargs = {'bar_height':0, 'selectable':False, 'inactive_bg':buttons_bg,
+                   'inactive_hover_fg':None, 'popup_bg':self.bg}
+
         if new_window_option:
             new_button = IconButton(self.buttons_frame, icons['open_in_new'],
-                                    command=self.open_in_window, bar_height=0,
-                                    selectable=False, inactive_bg=buttons_bg,
-                                    inactive_hover_fg=None, popup_bg=self.bg,
-                                    popup_label='Open In New Window')
+                                    command=self.open_in_window,
+                                    popup_label='Open In New Window', **bkwargs)
             new_button.pack(side=buttons_side)
+
+        if download_option:
+            down_button = IconButton(self.buttons_frame, icons['file_download'],
+                                     command=self.download_pdf,
+                                     popup_label='Download PDF', **bkwargs)
+            down_button.pack(side=buttons_side)
 
         if zoom_options:
             out_button = IconButton(self.buttons_frame, icons['minus'],
-                                    command=self.zoom_out, bar_height=0,
-                                    selectable=False, inactive_bg=buttons_bg,
-                                    inactive_hover_fg=None, popup_bg=self.bg,
-                                    popup_label='Zoom Out')
+                                    command=self.zoom_out,
+                                    popup_label='Zoom Out', **bkwargs)
             in_button = IconButton(self.buttons_frame, icons['plus'],
-                                   command=self.zoom_in, bar_height=0,
-                                   selectable=False, inactive_bg=buttons_bg,
-                                   inactive_hover_fg=None, popup_bg=self.bg,
-                                   popup_label='Zoom In')
+                                   command=self.zoom_in,
+                                   popup_label='Zoom In', **bkwargs)
             out_button.pack(side='left')
             in_button.pack(side='left')
         
@@ -98,7 +104,7 @@ class PdfDisplay(Frame):
             self.pdf_frame.destroy()
 
     def show_pdf(self, filename:str):
-        '''loads pdf from the fiven filepath'''
+        '''loads pdf from the given filepath'''
         self.scale_fact = 1 # reset zoom
         self.filename = filename
         self.remove_all()
@@ -167,6 +173,15 @@ class PdfDisplay(Frame):
         self.remove_all()
         self.label.config(text=text)
         self.label.pack(fill='both', expand=True)
+
+    def download_pdf(self):
+        '''opens dialog to download the current pdf file
+        this can only ever be called when a pdf is being viewed'''
+        destination = filedialog.asksaveasfilename(initialdir='/', title='Select destination file',
+                                                    filetypes=(('PDF File', '*.pdf'), ('All Files', '*.*')))
+        if destination[-4:] != '.pdf':
+            destination += '.pdf'
+        shutil.copy2(self.filename, destination)
 
     def open_in_window(self):
         '''opens PDF in new window - can only ever be called when a PDF is being viewed'''
