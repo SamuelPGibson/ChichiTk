@@ -1,9 +1,6 @@
 from tkinter import Toplevel, Frame, Label, Text, Scrollbar, PhotoImage
 from threading import Thread
-
-# chichitk depends on an older version of PyMuPDF: PyMuPDF==1.19.5
-# fitz is PyMuPDF
-import fitz
+import fitz # fitz is PyMuPDF
 
 from .buttons import IconButton
 from .icons import icons
@@ -16,7 +13,7 @@ class PdfDisplay(Frame):
     '''
     def __init__(self, master, bg, fg, font_name:str='Segoe UI', font_size:int=20,
                  button_pad:int=2, view_width=75, zoom_fact=1, height:int=600,
-                 new_window_option=True, zoom_options=True):
+                 buttons_side='left', new_window_option=True, zoom_options=True):
         '''
         
         Parameters
@@ -29,8 +26,10 @@ class PdfDisplay(Frame):
             :param button_pad: int - padding between button and top left corner
             :param view_width: int - width of view in pixels
             :param zoom_fact: float - factor by which to zoom pdf
+            :param buttons_side: str - Literal['left', 'right']
             :param new_window_option: bool - if True, include button to open in new window
         '''
+        assert buttons_side in ['left', 'right'], f"Invalid buttons side: '{buttons_side}', must be 'left' or 'right'"
         Frame.__init__(self, master, bg=bg)
         self.button_pad = button_pad
         self.bg = bg # store for new window
@@ -38,6 +37,7 @@ class PdfDisplay(Frame):
         self.zoom_fact = zoom_fact # never changes
         self.scale_fact = 1 # changes when zooming in and out
         self.img_object_list = []
+        self.buttons_side = buttons_side
         self.pdf_frame = None # tk.Frame once a pdf is loaded
         self.active = False # True when a pdf is loaded
 
@@ -50,7 +50,7 @@ class PdfDisplay(Frame):
                                     selectable=False, inactive_bg='#ffffff',
                                     inactive_hover_fg=None, popup_bg=self.bg,
                                     popup_label='Open In New Window')
-            new_button.pack(side='left')
+            new_button.pack(side=buttons_side)
 
         if zoom_options:
             out_button = IconButton(self.buttons_frame, icons['minus'],
@@ -74,9 +74,17 @@ class PdfDisplay(Frame):
     def position_buttons(self, event=None):
         '''repositions buttons - called when window is resized'''
         if self.active:
-            self.buttons_frame.place(x=self.pdf_frame.winfo_x() + self.button_pad,
-                                    y=self.pdf_frame.winfo_y() + self.button_pad,
-                                    anchor='nw')
+            if self.buttons_side == 'left':
+                x = self.pdf_frame.winfo_x() + self.button_pad
+                anchor = 'nw'
+            elif self.buttons_side == 'right':
+                right_edge = self.pdf_frame.winfo_x() + self.pdf_frame.winfo_width()
+                x = right_edge - self.scroll_y.winfo_width() - self.button_pad
+                anchor = 'ne'
+            else: # this should never happen
+                raise ValueError(f'PdfDisplay button side is invalid: {self.buttons_side}')
+            self.buttons_frame.place(x=x, y=self.pdf_frame.winfo_y() + self.button_pad,
+                                     anchor=anchor)
             self.buttons_frame.lift() # raise above pdf
 
     def remove_all(self):
@@ -100,9 +108,9 @@ class PdfDisplay(Frame):
         # Create image objects from pdf pages
         self.img_object_list = []
         for page in fitz.open(self.filename):
-            pix = page.getPixmap(dpi=int(72 * self.zoom_fact * self.scale_fact))
+            pix = page.get_pixmap(dpi=int(72 * self.zoom_fact * self.scale_fact))
             pix1 = fitz.Pixmap(pix, 0) if pix.alpha else pix
-            image = pix1.getImageData("ppm")
+            image = pix1.tobytes("ppm")
             self.img_object_list.append(PhotoImage(data=image))
 
         # Create new pdf frame
@@ -122,6 +130,7 @@ class PdfDisplay(Frame):
         self.scroll_y.config(command=self.pdf_text.yview)
         self.pdf_frame.pack()
         self.pdf_frame.bind('<Configure>', self.position_buttons)
+        self.update() # render so that buttons are positioned properly
         self.position_buttons() # place buttons and raise above pdf
 
         # Add pages to text box
