@@ -50,11 +50,14 @@ class TextBox(Frame):
         lines or consecutive spaces
     '''
     def __init__(self, master, callback=None, bg:str='#ffffff', fg:str='#000000',
-                 cursor_color=None, error_bg:str='#3c2525',
-                 error_highlight_bg:str='#ff0000', error_highlight_fg:str='#000000',
-                 track_fg:str='#bbbbbb', font_name:str='Consolas', font_size:int=15,
-                 width=None, height=None, focus_in_function=None, focus_out_function=None,
-                 check_blank_lines:bool=True, check_consecutive_spaces:bool=True):
+                 cursor_color=None, disabled_bg=None, disabled_fg=None,
+                 error_bg:str='#3c2525', error_highlight_bg:str='#ff0000',
+                 error_highlight_fg:str='#000000', track_fg:str='#bbbbbb',
+                 font_name:str='Consolas', font_size:int=15,  wrap='none',
+                 focus_in_function=None, focus_out_function=None,
+                 check_blank_lines:bool=True, check_consecutive_spaces:bool=True,
+                 line_numbers_labels=True, width=None, height=None,
+                 justify='left', inactive_justify='center'):
         '''Text box with number lines and callback when text box is edited
         
         Parameters
@@ -64,20 +67,29 @@ class TextBox(Frame):
             :param bg: str (hex code) - background color
             :param fg: str (hex code) - main text color
             :param cursor_color: str (hex code) - cursor color - if different from fg
+            :param disabled_bg: str (hex code) - background color when disabled
+            :param disabled_fg: str (hex code) - foreground color when disabled
             :param error_bg: str (hex code) - background color when there is an error
             :param error_highlight_bg: str (hex code) - highlight on text causing error
             :param error_highlight_fg: str (hex code) - color of text cauing error
             :param track_fg: str (hex code) - color of track text - line numbers
+            :param font_name: str - font for text box and line numbers
+            :param font_size: int - font size for text box and line numbers
+            :param wrap: str Literal['none', 'char', 'word'] - wrap setting
             :param focus_in_function: function () - called when text box takes focus
             :param focus_out_function: function () - called when text box loses focus
             :param check_blank_lines: bool - if True, show error when there are blank lines
             :param check_consecutive_spaces: bool - if True, show error when there are consecutive spaces
+            :param line_numbers_labels: bool - if True, show line numbers
         '''
         self.callback_function = callback
-        self.bg = bg
+        self.bg, self.fg = bg, fg
         self.error_bg = error_bg
         self.error_highlight_bg = error_highlight_bg
         self.error_highlight_fg = error_highlight_fg
+        self.disabled_bg = disabled_bg if disabled_bg else bg
+        self.disabled_fg = disabled_fg if disabled_fg else fg
+        self.justify, self.inactive_justify = justify, inactive_justify
         Frame.__init__(self, master, bg=bg)
         self.good_format = True # False if there are errors in the text box
         self.check_blank_lines = check_blank_lines
@@ -87,14 +99,17 @@ class TextBox(Frame):
         self.track = Text(self, width=4, height=height, font=(font_name, font_size),
                           bg=bg, fg=track_fg, wrap='none', bd=0,
                           yscrollcommand=lambda a, b: self.box.yview_moveto(a))
-        self.track.pack(side='left', fill='y')
+        if line_numbers_labels:
+            self.track.pack(side='left', fill='y')
         self.track.insert('end', '  1')
         self.track.config(state='disabled')
         # undo must be False because Ctrl+z causes infinite loop (no idea why)
         self.box = Text(self, width=width, height=height, font=(font_name, font_size),
-                        bg=bg, fg=fg, insertbackground=cursor_color, undo=False, wrap='none',
+                        bg=bg, fg=fg, insertbackground=cursor_color, undo=False, wrap=wrap,
                         yscrollcommand=lambda a, b: self.track.yview_moveto(a), bd=0)
         self.box.pack(side='right', fill='both', expand=True)
+        self.box.tag_add("justify", 1.0, "end")
+        self.box.tag_configure('justify', justify=self.justify)
         self.box.bind("<<TextModified>>", self.callback)
         #self.box.bind("<Key>", self.callback)
         if focus_in_function:
@@ -170,8 +185,15 @@ class TextBox(Frame):
         if self.callback_function:
             self.callback_function(text)
 
-    def get(self):
-        '''returns entire text in text box'''
+    def get(self, strip=True) -> str:
+        '''returns entire text in text box
+
+        Parameters
+        -----------
+            :param strip: bool - if True, removes spaces and newline characters for beginning and end
+        '''
+        if strip:
+            return self.box.get(0.0, 'end').strip()
         return self.box.get(0.0, 'end')
 
     def clear(self):
@@ -186,4 +208,24 @@ class TextBox(Frame):
         '''clears all text from text box and adds text'''
         self.clear()
         self.insert(text)
+
+    def set_active(self):
+        '''
+        Purpose:
+            sets text box state to 'normal' so that it is interactable
+        '''
+        self.box.config(state='normal', bg=self.bg, fg=self.fg)
+        self.box.tag_add("justify", 1.0, "end")
+        self.box.tag_configure('justify', justify=self.justify)
+        self.track.config(bg=self.bg)
+
+    def set_inactive(self):
+        '''
+        Purpose:
+            sets text box state to 'disabled' so that it is not interactable
+        '''
+        self.box.config(state='disabled', bg=self.disabled_bg, fg=self.disabled_fg)
+        self.box.tag_add("justify", 1.0, "end")
+        self.box.tag_configure('justify', justify=self.inactive_justify)
+        self.track.config(bg=self.disabled_bg)
 
