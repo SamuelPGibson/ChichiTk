@@ -25,7 +25,7 @@ The **official** documentation can be found in the Wiki Tab here:
 
 **--> [ChichiTk Documentation](https://github.com/SamGibson1/ChichiTk/wiki)**
 
-## Example Program
+## Example Program - Stopwatch
 The following is a simple Stopwatch program that uses chichitk.Player to manage callbacks:
 ```python
 from tkinter import Tk, Frame, Label
