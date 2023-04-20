@@ -13,17 +13,20 @@ class ScrollableFrame(tk.Frame):
         All widgets must be put in self.scrollable_frame, not self
     '''
     def __init__(self, master:tk.Frame, bg:str, include_scrollbar:bool=True,
-                 yscrollincrement:int=1, check_hover=False, *args, **kwargs):
+                 scrollbar_side='right', yscrollincrement:int=1,
+                 check_hover=False, *args, **kwargs):
         '''
         Parameters
         ----------
             :param master: tk.Frame - parent widget
             :param bg: str (hex code) - background color
             :param include_scrollbar: bool - if True, scrollbar is packed right
+            :param scrollbar_side: str - Literal['left', 'right']
             :param yscrollincrement: int - pixels scrolled per mouse scroll (70x)
             :param check_hover: bool - if True, will only respond to mousewheel
                                        events if the cursor is hovering on Frame
         '''
+        assert scrollbar_side in ['left', 'right'], f'Invalide scrollbar side: {scrollbar_side}'
         self.hovering = not check_hover
         super().__init__(master, *args, **kwargs)
         style = ttk.Style(master)
@@ -42,7 +45,7 @@ class ScrollableFrame(tk.Frame):
             scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview,
                                       style='arrowless.Vertical.TScrollbar')
             self.canvas.configure(yscrollcommand=scrollbar.set)
-            scrollbar.pack(side="right", fill="y")
+            scrollbar.pack(side=scrollbar_side, fill="y")
         self.canvas.pack(side="left", fill="both", expand=True)
         style.configure("arrowless.Vertical.TScrollbar", troughcolor=bg)
         self.canvas.bind('<Configure>', self.FrameWidth)
