@@ -23,7 +23,14 @@ classifiers = [
 
 [tool.setuptools.packages.find]
 include = ["chichitk*"]  # package names should match these glob patterns (["*"] by default)
-exclude = ["chichitk_env*", "documentation_images*", "example.pdf", "example.docx", "example.py", "stopwatch_example.py"]
+exclude = [
+    "chichitk_env*",
+    "documentation_images*",
+    "example.pdf",
+    "example.docx",
+    "example.py",
+    "stopwatch_example.py"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/SamGibson1/ChichiTk"
