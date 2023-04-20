@@ -35,43 +35,48 @@ class BaseButton(Frame):
         example, if the button is at the very top of the window, the popup will
         appear beneath the button instead.
     '''
-    def __init__(self, master, command, popup_label:str=None, font_name:str='Segoe UI', font_size:int=10,
-                padx:int=0, pady:int=0, selectable:bool=True, select_on_click:bool=True, selected=False,
-                tool_tip_font_name:str='Segoe UI', tool_tip_font_size:int=10, bar_height:int=0, bar_side='bottom',
-                active_bg:str='#070708', inactive_bg:str='#000000', active_hover_bg=None,
-                inactive_hover_bg=None, active_fg:str='#13ce12', inactive_fg:str='#888888',
-                active_hover_fg:str='#74d573', inactive_hover_fg:str='#74d573', popup_bg=None,
-                active_bar_color=None, inactive_bar_color=None, active_hover_bar_color:str=None,
-                inactive_hover_bar_color:str='#dcdcdc', off_fg:str='#555555'):
+    def __init__(self, master, command, popup_label:str=None, click_popup=None,
+                 font_name:str='Segoe UI', font_size:int=10, padx:int=0, pady:int=0,
+                 selectable:bool=True, select_on_click:bool=True, selected=False,
+                 tool_tip_font_name:str='Segoe UI', tool_tip_font_size:int=10,
+                 bar_height:int=0, bar_side='bottom', active_bg:str='#070708',
+                 inactive_bg:str='#000000', active_hover_bg=None,
+                 inactive_hover_bg=None, active_fg:str='#13ce12',
+                 inactive_fg:str='#888888', active_hover_fg:str='#74d573',
+                 inactive_hover_fg:str='#74d573', popup_bg=None,
+                 active_bar_color=None, inactive_bar_color=None,
+                 active_hover_bar_color:str=None,
+                 inactive_hover_bar_color:str='#dcdcdc', off_fg:str='#555555'):
         '''inherits from tk.Frame - base button for inheritance from IconButton, LabelButton, ToggleIconButton, etc
         BaseButton only contains bottom bar - everything else must be added by child class
         child class must contain function config_colors
 
         Parameters
         ----------
-            master : frame in which to put button
-            command : function - function to be executed when button is clicked
-            popup_label : str - text to appear as tool tip when cursor hovers on button
-            padx : Int - internal x pad for button
-            pady : Int - internal y pad for button
-            selectable : Boolean - if True, button can be selected
-            bar_height : Int - height of bar at the bottom of button
-            bar_side : Literal['top', 'bottom', 'left', 'right'] - pack side for bar if bar_height > 0
+            :param master: frame in which to put button
+            :param command: function - function to be executed when button is clicked
+            :param popup_label: str - text to appear as tool tip when cursor hovers on button
+            :param click_popup: str - popup label changes to click_popup temporarily when button is clicked
+            :param padx: Int - internal x pad for button
+            :param pady: Int - internal y pad for button
+            :param selectable: Boolean - if True, button can be selected
+            :param bar_height: Int - height of bar at the bottom of button
+            :param bar_side: Literal['top', 'bottom', 'left', 'right'] - pack side for bar if bar_height > 0
             
-            active_bg : str (hex code) - background when button is selected
-            inactive_bg : str (hex code) - background when button is not selected
-            active_hover_bg : str (hex code) - background when selected and cursor is hovering - if None: same as active_bg
-            inactive_hover_bg : str (hex code) - background when not selected and cursor if hovering - if None: same as inactive_bg
+            :param active_bg: str (hex code) - background when button is selected
+            :param inactive_bg: str (hex code) - background when button is not selected
+            :param active_hover_bg: str (hex code) - background when selected and cursor is hovering - if None: same as active_bg
+            :param inactive_hover_bg: str (hex code) - background when not selected and cursor if hovering - if None: same as inactive_bg
 
-            active_fg : str (hex code) - icon and label fg when button is selected
-            inactive_fg : str (hex code) - icon and label fg when button is not selected
-            active_hover_fg : str (hex code) - icon and label fg when selected and cursor is hovering - if None: same as active_fg
-            inactive_hover_fg : str (hex code) - icon and label fg when not selected and cursor is hovering - if None: same as inactive_fg
+            :param active_fg: str (hex code) - icon and label fg when button is selected
+            :param inactive_fg: str (hex code) - icon and label fg when button is not selected
+            :param active_hover_fg: str (hex code) - icon and label fg when selected and cursor is hovering - if None: same as active_fg
+            :param inactive_hover_fg: str (hex code) - icon and label fg when not selected and cursor is hovering - if None: same as inactive_fg
 
-            active_bar_color : str (hex code) - bar color when selected - if None: same as active_fg
-            inactive_bar_color : str (hex code) - bar color when not selected - if None: same as inactive_bg
-            active_hover_bar_color : str (hex code) - bar color when selected and cursor is hovering - if None: same as active_bar_color
-            inactive_hover_bar_color : str (hex code) - bar color when not selected and cursor is hovering - if None: same as inactive_bar_color
+            :param active_bar_color: str (hex code) - bar color when selected - if None: same as active_fg
+            :param inactive_bar_color: str (hex code) - bar color when not selected - if None: same as inactive_bg
+            :param active_hover_bar_color: str (hex code) - bar color when selected and cursor is hovering - if None: same as active_bar_color
+            :param inactive_hover_bar_color: str (hex code) - bar color when not selected and cursor is hovering - if None: same as inactive_bar_color
         '''
         Frame.__init__(self, master)
         self.padx, self.pady = padx, pady
@@ -81,6 +86,7 @@ class BaseButton(Frame):
         self.font_name, self.font_size = font_name, font_size
         self.selectable, self.select_on_click = selectable, select_on_click
         self.popup_labels = [popup_label + ' : Inactive' if popup_label else None, popup_label] # either both text or both None
+        self.click_popup = click_popup
         self.off_fg = off_fg
         self.bg_colors = [[inactive_bg, inactive_hover_bg if inactive_hover_bg else inactive_bg],
                             [active_bg, active_hover_bg if active_hover_bg else active_bg]]
@@ -151,6 +157,8 @@ class BaseButton(Frame):
             
     def click_button(self, event=None):
         if self.active:
+            if self.popup_labels[0] and self.click_popup:
+                self.tool_tip.set_text(self.click_popup)
             self.click_command()
             if self.select_on_click:
                 self.select()
