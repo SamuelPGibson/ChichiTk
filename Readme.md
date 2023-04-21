@@ -56,7 +56,13 @@ Play.pack(side='bottom', fill='x')
 app.mainloop()
 ```
 This results in the following window:
+
 <img src="documentation_images/stopwatch_example.jpg" width="600"/>
 
-<!-- ## Example Application - Password Manager
-Video here showing password manager and link to git repo for password manager -->
+## Example Application - Password Manager
+
+https://user-images.githubusercontent.com/74847576/233730056-cffb5a0d-41db-44e4-ad24-7276406f9ba1.mp4
+
+The Passwords App project can be found here:
+
+**--> [Project Link](https://github.com/SamGibson1/ChichiTk/wiki)**
