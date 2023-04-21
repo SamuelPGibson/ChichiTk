@@ -402,7 +402,7 @@ class LabelButton(BaseButton):
         BaseButton.__init__(self, master, command, **kwargs)
         self.label_text = label
         self.label = Label(self, text=label, font=(self.font_name, self.font_size), bd=0)
-        self.label.pack(side='top', padx=self.padx, pady=self.pady)
+        self.label.pack(side='top', fill='both', expand=True, padx=self.padx, pady=self.pady)
         self.label.bind("<Button-1>", self.click_button)
 
         self.config_colors()
