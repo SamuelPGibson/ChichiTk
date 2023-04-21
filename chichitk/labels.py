@@ -162,7 +162,7 @@ class NumberEditLabel(EditLabel):
 
     def __init__(self, master, callback=None, min_value=0, max_value=100,
                  step=1, default_value=None, reference_width=2.0, max_len=None,
-                 drag_threshold=0.2, **kwargs):
+                 drag_threshold=0.2, draggable=True, **kwargs):
         '''
         Parameters
         ----------
@@ -175,6 +175,7 @@ class NumberEditLabel(EditLabel):
             :param reference_width: float - fraction of label width
             :param max_len: int - maximum number of characters in entry box
             :param drag_threshold: float (seconds) - click duration to be considered a single click (not drag)
+            :param draggable: bool - if True, label value can be changed by dragging (like a slider)
         '''
         if step % 1 == 0: # integer
             self.__decimals = 0
@@ -194,12 +195,11 @@ class NumberEditLabel(EditLabel):
         self.__drag_threshold = drag_threshold
         self.__reference_width = reference_width
 
-        self.label.config(cursor='sb_h_double_arrow')
-
-        # Bindings
-        self.label.bind("<Button-1>", self.__mouse_click)
-        self.label.bind("<ButtonRelease-1>", self.__mouse_release, add='+')
-        self.label.bind("<B1-Motion>", self.__mouse_drag)
+        if draggable:
+            self.label.config(cursor='sb_h_double_arrow')
+            self.label.bind("<Button-1>", self.__mouse_click)
+            self.label.bind("<ButtonRelease-1>", self.__mouse_release, add='+')
+            self.label.bind("<B1-Motion>", self.__mouse_drag)
 
     def __check_function(self, text:str) -> bool:
         '''
