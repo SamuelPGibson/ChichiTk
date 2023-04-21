@@ -105,7 +105,7 @@ class LeftFrame(Frame):
         for i in range(4):
             frame.grid_rowconfigure(i, weight=1)
 
-        for i, label in enumerate(['Dropdown', 'Check Entry', 'Color Entry', 'Upload File']):
+        for i, label in enumerate(['Dropdown', 'Check Entry', 'Color Entry', 'Upload File', 'Range Labels']):
             Label(frame, text=label, bg=colors[1], fg='#ffffff',
                   font=('Segoe UI', 11)).grid(row=i, column=0)
         dropdown = chichitk.BasicDropDown(frame, ['Option 1', 'Option 2', 'Option 3'],
@@ -114,7 +114,10 @@ class LeftFrame(Frame):
         color_entry = chichitk.ColorEntry(frame, bg=colors[0], fg='#ffffff')
         upload = chichitk.FileDialog(frame, '', file_types=['wav', 'mp3'],
                                      bg=colors[0], fg='#ffffff')
-        for i, widget in enumerate([dropdown, entry, color_entry, upload]):
+        number = chichitk.RangeLabel(frame, default_min=20, default_max=30,
+                                     bg=colors[0], fg='#ffffff',
+                                     hover_bg=colors[2])
+        for i, widget in enumerate([dropdown, entry, color_entry, upload, number]):
             widget.grid(row=i, column=1, pady=2, sticky='nsew')
 
         Label(self, text='Select Widgets', bg=colors[1], fg='#ffffff',
