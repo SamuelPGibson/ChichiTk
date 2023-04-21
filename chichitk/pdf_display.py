@@ -179,6 +179,8 @@ class PdfDisplay(Frame):
         this can only ever be called when a pdf is being viewed'''
         destination = filedialog.asksaveasfilename(initialdir='/', title='Select destination file',
                                                     filetypes=(('PDF File', '*.pdf'), ('All Files', '*.*')))
+        if destination == '': # clicked 'cancel' instead of saving file
+            return
         if destination[-4:] != '.pdf':
             destination += '.pdf'
         shutil.copy2(self.filename, destination)
