@@ -65,4 +65,4 @@ https://user-images.githubusercontent.com/74847576/233730056-cffb5a0d-41db-44e4-
 
 The Passwords App project can be found here:
 
-**--> [Project Link](https://github.com/SamGibson1/ChichiTk/wiki)**
+**--> [Project Link](https://github.com/SamGibson1/PasswordManager/wiki)**
