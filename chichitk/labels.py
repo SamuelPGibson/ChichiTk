@@ -91,6 +91,14 @@ class EditLabel(Frame):
         if callback and self.callback:
             self.callback(text)
 
+    def set_bg(self, bg:str, hover_bg:str=None):
+        '''updates background color and hover_bg, optionally'''
+        self.bg = bg
+        self.hover_bg = hover_bg if hover_bg is not None else self.hover_bg
+        self.label.config(bg=self.bg)
+        self.config(bg=self.bg)
+        self.Entry.set_bg(self.bg)
+
     def hover_enter(self, event=None):
         if self.editable:
             self.label.config(bg=self.hover_bg)

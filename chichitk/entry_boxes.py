@@ -86,6 +86,11 @@ class CheckEntry(Entry):
         if self.__check_function is not None and not self.__check_function(text):
             self.config(bg=self.error_color)
 
+    def set_bg(self, bg:str):
+        '''updates background color'''
+        self.bg = bg
+        self.config(bg=self.bg)
+
     def get(self):
         '''returns text currently in CheckEntry'''
         return self.sv.get()
