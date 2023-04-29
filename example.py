@@ -98,8 +98,14 @@ class LeftFrame(Frame):
         super().__init__(master, bg=colors[1])
 
         # Widgets Frame - Bottom
-        frame = Frame(self, bg=colors[1], padx=5, pady=5)
-        frame.pack(side='bottom', fill='both')
+        collapse_frame = chichitk.CollapseFrame(self, label='Select Widgets', label_side='top',
+                                                font_name='Segoe UI bold', font_size=14,
+                                                bg=colors[1], inactive_hover_bg=colors[1],
+                                                active_hover_bg=colors[2], inactive_hover_fg='#00ff00',
+                                                inactive_fg='#ffffff',
+                                                padx=5, pady=5)
+        collapse_frame.pack(side='bottom', fill='both')
+        frame = collapse_frame.frame
         frame.grid_columnconfigure(0, weight=1)
         frame.grid_columnconfigure(1, weight=1)
         for i in range(4):
@@ -119,9 +125,6 @@ class LeftFrame(Frame):
                                      hover_bg=colors[2])
         for i, widget in enumerate([dropdown, entry, color_entry, upload, number]):
             widget.grid(row=i, column=1, pady=2, sticky='nsew')
-
-        Label(self, text='Select Widgets', bg=colors[1], fg='#ffffff',
-              font=('Segoe UI bold', 14)).pack(side='bottom', fill='x')
 
         # Textbox - Top
         Label(self, text='Lined Textbox', bg=colors[0], fg='#ffffff',
