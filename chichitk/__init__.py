@@ -3,6 +3,7 @@ __version__ = "0.0.1"
 # Import widgets
 from .aspect_frame import *
 from .buttons import *
+from .collapse_frame import CollapseFrame
 from .dropdowns import *
 from .entry_boxes import *
 from .file_dialog import *
