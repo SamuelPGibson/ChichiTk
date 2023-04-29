@@ -316,7 +316,8 @@ class RangeLabel(Frame):
     '''
     def __init__(self, master, callback=None, bg='#ffffff', sep_text='to',
                  min_val=0, max_val=100, default_min=None, default_max=None,
-                 step=1, label_fg='#888888', label_font_size=10, **kwargs):
+                 step=1, min_range=0, label_fg='#888888', label_font_size=10,
+                 **kwargs):
         '''
         Parameters
         ----------
@@ -329,21 +330,25 @@ class RangeLabel(Frame):
             :param default_min: int - default minimum value if different from min_val
             :param default_max: int - default maximum value if different from max_val
             :param step: int or float - slider increment
+            :param min_range: int - minimum allowed distance between min and max
             :param label_fg: str (hex code) - color of sep_text
             :param label_font_size: int - font size of sep text
         '''
         super().__init__(master, bg=bg)
+        self.__min_range = min_range
         self.__callback_function = callback
         default_min = default_min if default_min is not None else min_val
         default_max = default_max if default_max is not None else max_val
 
         self.__MinLabel = NumberEditLabel(self, self.__min_callback, bg=bg,
-                                          min_value=min_val, max_value=default_max,
+                                          min_value=min_val,
+                                          max_value=default_max - self.__min_range,
                                           step=step, default_value=default_min,
                                           max_len=len(str(max_val)), **kwargs)
         self.__MaxLabel = NumberEditLabel(self, self.__max_callback, bg=bg,
-                                          min_value=default_min, max_value=max_val,
-                                          step=step, default_value=default_max,
+                                          min_value=default_min + self.__min_range,
+                                          max_value=max_val, step=step,
+                                          default_value=default_max,
                                           max_len=len(str(max_val)), **kwargs)
         self.__MinLabel.pack(side='left', fill='x', expand=True)
         Label(self, text=f' {sep_text} ', bg=bg, fg=label_fg,
@@ -353,12 +358,12 @@ class RangeLabel(Frame):
     def set_min(self, new_min:int):
         '''updates current min value - does not change range limits'''
         self.__MinLabel.set(new_min)
-        self.__MaxLabel.set_min_value(new_min)
+        self.__MaxLabel.set_min_value(new_min + self.__min_range)
 
     def set_max(self, new_max:int):
         '''updates current max value - does not change range limits'''
         self.__MaxLabel.set(new_max)
-        self.__MinLabel.set_max_value(new_max)
+        self.__MinLabel.set_max_value(new_max - self.__min_range)
 
     def set_min_limit(self, new_min_limit:int):
         '''updates min limit - does not change current values'''
@@ -368,12 +373,18 @@ class RangeLabel(Frame):
         '''updates max limit - does not change current values'''
         self.__MaxLabel.set_max_value(new_max_limit)
 
+    def set_min_range(self, min_range:int):
+        '''updates the minimum allowed distance between min and max values'''
+        self.__min_range = min_range
+        self.__MaxLabel.set_min_value(self.__MinLabel.get() + self.__min_range)
+        self.__MinLabel.set_max_value(self.__MaxLabel.get() - self.__min_range)
+
     def __min_callback(self, min_value:int):
         '''
         called when min label is changed
         updates minimum value of max label and calls callback function
         '''
-        self.__MaxLabel.set_min_value(min_value)
+        self.__MaxLabel.set_min_value(min_value + self.__min_range)
         if self.__callback_function is not None:
             self.__callback_function(*self.get())
 
@@ -382,7 +393,7 @@ class RangeLabel(Frame):
         called when max label is changed
         updates maximum value of min label and calls callback function
         '''
-        self.__MinLabel.set_max_value(max_value)
+        self.__MinLabel.set_max_value(max_value - self.__min_range)
         if self.__callback_function is not None:
             self.__callback_function(*self.get())
 
