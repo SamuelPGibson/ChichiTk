@@ -11,6 +11,9 @@ class CollapseFrame(Frame):
 
         DO NOT put anything directly in the CollapseFrame. Only user the header
         and body frames.
+
+        Warning: if CollapseFrame is initially close, and not collapsable,
+        there will be no way for user to access the content of the body frame.
     '''
     def __init__(self, master:Frame, open_callback=None, close_callback=None,
                  label=None, bg='#ffffff', border_bg=None,
@@ -19,7 +22,7 @@ class CollapseFrame(Frame):
                  inactive_hover_fg=None, active_hover_fg=None,
                  label_side='left', font_name='Segoe UI', font_size=10,
                  label_padx=0, label_pady=0, body_padx=0, body_pady=0,
-                 active=True, **kwargs):
+                 active=True, collapsable=True, **kwargs):
         '''active refers to the state when the body frame is visible
         Parameters
         ----------
@@ -45,6 +48,7 @@ class CollapseFrame(Frame):
             :param body_padx: int - x padding around body frame
             :param body_pady: int - y padding around body frame
             :param active: bool - initial visibility of body frame
+            :param collapsable: bool - if True, CollapseFrame is static
         '''
         super_bg = border_bg if border_bg is not None else bg
         super().__init__(master, bg=super_bg, **kwargs)
@@ -61,20 +65,23 @@ class CollapseFrame(Frame):
         active_hover_fg = active_hover_fg if active_hover_fg is not None else active_fg
         self.__fg_colors = [[inactive_fg, active_fg], [inactive_hover_fg, active_hover_fg]]
         self.__draw_label = label is not None
+        self.__collapsable = collapsable
         self.__active, self.__hovering = active, False
 
         # Header Frame
         self.header = Frame(self)
         self.header.pack(side='top', fill='x')
-        self.header.bind('<Enter>', self.hover_enter)
-        self.header.bind('<Leave>', self.hover_leave)
-        self.header.bind('<Button-1>', self.header_click)
+        if self.__collapsable:
+            self.header.bind('<Enter>', self.hover_enter)
+            self.header.bind('<Leave>', self.hover_leave)
+            self.header.bind('<Button-1>', self.header_click)
         if self.__draw_label:
             self.label = Label(self.header, text=label, font=(font_name, font_size))
             self.label.pack(side=label_side, padx=label_padx, pady=label_pady)
-            self.label.bind('<Enter>', self.hover_enter)
-            self.label.bind('<Leave>', self.hover_leave)
-            self.label.bind('<Button-1>', self.header_click)
+            if self.__collapsable:
+                self.label.bind('<Enter>', self.hover_enter)
+                self.label.bind('<Leave>', self.hover_leave)
+                self.label.bind('<Button-1>', self.header_click)
 
         # Body Frame
         self.frame = Frame(self, bg=bg)
@@ -101,16 +108,25 @@ class CollapseFrame(Frame):
 
     def hover_enter(self, event=None):
         '''called when mouse enters header'''
+        if not self.__collapsable:
+            print('CollapseFrame Error: tried to hover enter when CollapseFrame is not collapsable')
+            return
         self.__hovering = True
         self.__color_config()
 
     def hover_leave(self, event=None):
         '''called when mouse leaves header'''
+        if not self.__collapsable:
+            print('CollapseFrame Error: tried to hover leave when CollapseFrame is not collapsable')
+            return
         self.__hovering = False
         self.__color_config()
 
     def header_click(self, event=None):
         '''called when mouse clicks on header - toggles active status'''
+        if not self.__collapsable:
+            print('CollapseFrame Error: tried to toggle body frame when CollapseFrame is not collapsable')
+            return
         if self.__active:
             self.hide(callback=True)
         else:
