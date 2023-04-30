@@ -1,4 +1,3 @@
-import os
 from tkinter import Frame, Label
 
 from .progress_bar import ProgressBar
@@ -18,7 +17,7 @@ class FunctionProgress(Frame):
         with each iteration to increment progress bar
     '''
     def __init__(self, master, command, label, bg, loading_text='Loading...',
-                 height=25, indicator_pady=0, font_name='Segoe UI',
+                 icon_path=None, height=25, indicator_pady=0, font_name='Segoe UI',
                  font_size=10, text_font_size=12, inactive_bg:str='#ffffff',
                  loaded_bg:str='#00ff00', text_side='bottom', active_color='#00ff00',
                  text_color='#cccccc', inactive_color=None):
@@ -32,6 +31,7 @@ class FunctionProgress(Frame):
             :param label: str - label for IconButton - to call command
             :param bg: str (hex code) - widget background color
             :param loading_text: str - text displayed while command is running
+            :param icon_path: str - optioal path to png file to replace default 'edit' icon
             :param height: int - height of progress bar
             :param indicator_pady: int - pady for indicator square
             :param inactive_bg: str (hex code) - color of indicator when incomplete
@@ -48,7 +48,8 @@ class FunctionProgress(Frame):
 
         self.main_frame = Frame(self, bg=bg)
         self.main_frame.pack(side='top', fill='both', expand=True)
-        button = IconButton(self.main_frame, icons['edit'], command, label=label,
+        icon = icon_path if icon_path is not None else icons['edit']
+        button = IconButton(self.main_frame, icon, command, label=label,
                             selectable=False, inactive_bg=bg, bar_height=2)
         button.pack(side='left', fill='both', expand=True)
         self.indicator = Label(self.main_frame, text=' ' * 3, bg=self.inactive_bg,
@@ -84,4 +85,3 @@ class FunctionProgress(Frame):
     def is_complete(self) -> bool:
         '''returns True if function is complete, otherwise False'''
         return self.complete
-
