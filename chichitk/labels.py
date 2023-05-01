@@ -185,7 +185,8 @@ class NumberEditLabel(EditLabel):
             :param drag_threshold: float (seconds) - click duration to be considered a single click (not drag)
             :param draggable: bool - if True, label value can be changed by dragging (like a slider)
         '''
-        if step % 1 == 0: # integer
+        self.__step = step
+        if self.__step % 1 == 0: # integer
             self.__decimals = 0
         else:
             self.__decimals = len(str(self.__step).split(".")[1])
@@ -198,7 +199,6 @@ class NumberEditLabel(EditLabel):
         
         self.__callback_function = callback
         self.__min_value, self.__max_value = min_value, max_value
-        self.__step = step
         self.__values = np.arange(self.__min_value, self.__max_value + self.__step * 0.9, self.__step)
         self.__drag_threshold = drag_threshold
         self.__reference_width = reference_width
