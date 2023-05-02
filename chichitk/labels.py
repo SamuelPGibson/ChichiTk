@@ -55,6 +55,7 @@ class EditLabel(Frame):
         self.hover_leave_function = hover_leave_function
         self.entry_on_function = entry_on_function
         self.entry_off_function = entry_off_function
+        self.last_callback = time.time() # to avoid double callbacks
 
         Frame.__init__(self, master, bg=bg)
         
@@ -134,7 +135,10 @@ class EditLabel(Frame):
             self.text = self.Entry.get()
             self.label.config(text=self.text)
             if callback and self.callback:
-                self.callback(self.text)
+                current_time = time.time()
+                if current_time - self.last_callback > 0.05: # avoid double callback
+                    self.last_callback = current_time
+                    self.callback(self.text)
         if self.entry_off_function:
             self.entry_off_function()
 
@@ -217,7 +221,7 @@ class NumberEditLabel(EditLabel):
         '''
         if text == '':
             return False
-        if text[0] == '.' or text.count('.') >= 1: # improperly formatted number
+        if text[0] == '.' or text.count('.') > 1: # improperly formatted number
             return False
         value = float(text)
         if value < self.__min_value or value > self.__max_value: # out of range
@@ -231,7 +235,8 @@ class NumberEditLabel(EditLabel):
         reformats text if necessary and calls callback function
         '''
         # to reformat if necessary
-        self.label.config(text=self.__get_text(self.get()))
+        self.text = self.__get_text(self.get())
+        self.label.config(text=self.text)
         if self.__callback_function is not None:
             self.__callback_function(self.get())
 
@@ -311,6 +316,14 @@ class NumberEditLabel(EditLabel):
         else:
             return float(super().get())
 
+    def set_perc(self, perc:float):
+        '''sets value based on percentage - float between 0 and 1'''
+        self.set(self.__min_value + (self.__max_value - self.__min_value) * perc)
+
+    def get_perc(self) -> float:
+        '''returns label value as a percentage - float between 0 and 1'''
+        return (self.get() - self.__min_value) / (self.__max_value - self.__min_value)
+
 class RangeLabel(Frame):
     ''' Pair of NumberEditLabels that allow user to select a range
     '''
@@ -339,17 +352,18 @@ class RangeLabel(Frame):
         self.__callback_function = callback
         default_min = default_min if default_min is not None else min_val
         default_max = default_max if default_max is not None else max_val
+        max_len = len(str(max_val)) if step % 1 == 0 else None
 
         self.__MinLabel = NumberEditLabel(self, self.__min_callback, bg=bg,
                                           min_value=min_val,
                                           max_value=default_max - self.__min_range,
                                           step=step, default_value=default_min,
-                                          max_len=len(str(max_val)), **kwargs)
+                                          max_len=max_len, **kwargs)
         self.__MaxLabel = NumberEditLabel(self, self.__max_callback, bg=bg,
                                           min_value=default_min + self.__min_range,
                                           max_value=max_val, step=step,
                                           default_value=default_max,
-                                          max_len=len(str(max_val)), **kwargs)
+                                          max_len=max_len, **kwargs)
         self.__MinLabel.pack(side='left', fill='x', expand=True)
         Label(self, text=f' {sep_text} ', bg=bg, fg=label_fg,
               font=('Segoe UI', label_font_size)).pack(side='left')
