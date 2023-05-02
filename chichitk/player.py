@@ -2,8 +2,9 @@ from tkinter import Frame
 
 from .timer import Timer
 from .buttons import PlayerButtons
-from .sliders import SimpleScrollBar, PlotScrollBar, DoubleScrollBar
+from .sliders import TimeSlider, PlotScrollBar, DoubleScrollBar
 
+# TODO: make TimeSlider attribute customizable through Player
 
 class Player(Frame):
     ''' Player executes a callback function with precise timing.
@@ -18,7 +19,7 @@ class Player(Frame):
                  slider_type:str='single', frame_num=1000, frame_rate=29.97,
                  step_increment:int=150, end_callback=None, start_callback=None,
                  stop_callback=None, skip_callback=None, buttons_on_top=False,
-                 buttons_padx_weight=6, value_display_fact=1):
+                 buttons_padx_weight=6, simple_slider_width=None):
         ''' Only keeps track of the current frame using Timer
 
         Parameters
@@ -57,10 +58,11 @@ class Player(Frame):
                              skip_callback=skip_callback, min_step=0, max_step=frame_num)
 
         if slider_type == 'simple':
-            self.__Slider = SimpleScrollBar(self, self.__slider_update, min_value=0,
-                                            max_value=frame_num, start_value=0, bg=bg,
-                                            value_display_fact=value_display_fact,
-                                            limit_labels=True)
+            self.__Slider = TimeSlider(self, self.__slider_update, bg=bg,
+                                       frame_num=frame_num, active_line_color='#ffffff',
+                                       active_line_hover_color='#13ce12', slider_color='#ffffff',
+                                       hide_slider=True, steps_per_sec=1/delay,
+                                       slider_type='circle', width=simple_slider_width)
         elif slider_type == 'single':
             self.__Slider = PlotScrollBar(self, self.__slider_update, None, frame_num,
                                           min_frame=0, start_frame=0, frame_rate=self.__frame_rate,
