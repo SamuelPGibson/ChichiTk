@@ -1,4 +1,4 @@
-import tkinter as tk
+from tkinter import Toplevel, Label, Widget, Event
 
 
 def add_line_breaks(text:str, max_line_len:int, split_char=' ', replace_char='\n'):
@@ -24,7 +24,7 @@ def add_line_breaks(text:str, max_line_len:int, split_char=' ', replace_char='\n
     return output_text
 
 
-class ToolTip(tk.Toplevel):
+class ToolTip(Toplevel):
     ''' Popup to display information when the cursor hovers on a widget
     
         Info can be displayed on multiple lines by setting chars_per_line
@@ -45,23 +45,23 @@ class ToolTip(tk.Toplevel):
         '''
         self.__chars_per_line = chars_per_line
         self.__fade_inc, self.__fade_ms = fade_inc, fade_ms
-        tk.Toplevel.__init__(self, master)
+        super().__init__(master)
         #make window invisible, on the top, and strip all window decorations/features
         self.attributes('-alpha', 0, '-topmost', True)
         self.overrideredirect(1)
         #style and create label. you can override style with kwargs
         style = dict(bd=2, relief='raised', font='courier 10 bold', bg='#FFFF99', anchor='w')
-        self.label = tk.Label(self, **{**style, **kwargs})
+        self.label = Label(self, **{**style, **kwargs})
         self.label.grid(row=0, column=0, sticky='w')
         #used to determine if an opposing fade is already in progress
         self.fout:bool = False
         
-    def bind(self, target:tk.Widget, text:str, **kwargs):
+    def bind(self, target:Widget, text:str, **kwargs):
         #bind Enter(mouseOver) and Leave(mouseOut) events to the target of this tooltip
         target.bind('<Enter>', lambda e: self.fadein(0, text, e))
         target.bind('<Leave>', lambda e: self.fadeout(1 - self.__fade_inc, e))
 
-    def fadein(self, alpha:float, text:str=None, event:tk.Event=None):
+    def fadein(self, alpha:float, text:str=None, event:Event=None):
         #if event and text then this call came from target
         #~ we can consider this a "fresh/new" call
         if event is not None and text is not None:
@@ -78,14 +78,11 @@ class ToolTip(tk.Toplevel):
             widget_x = event.widget.winfo_rootx()
             widget_y = event.widget.winfo_rooty()
 
-            #x and y offsets
-            offset_x = int((widget_width - self.label.winfo_width()) / 2)
-            offset_y = int((widget_height + self.label.winfo_height()) / 2)
-            #get geometry
+            # compute popup geometry
             w = self.label.winfo_width()
             h = self.label.winfo_height()
-            x = widget_x + offset_x
-            y = widget_y - offset_y
+            x = widget_x + int((widget_width - w) / 2) # to center horizontally
+            y = widget_y - h # directly above widget
 
             # check root coordinates
             root_width = event.widget.winfo_toplevel().winfo_width()
@@ -104,7 +101,7 @@ class ToolTip(tk.Toplevel):
             # ensure tool_tip is not on top of widget - this makes a button unclickable!
             # this can only happen if tool_tip was moved down by top enforcement, so move it to below widget
             if y + h > widget_y:
-                y = widget_y + offset_y # position tool_tip below widget
+                y = widget_y + widget_height # position tool_tip below widget
 
             #apply geometry
             self.geometry(f'{w}x{h}+{x}+{y}')
@@ -116,7 +113,7 @@ class ToolTip(tk.Toplevel):
             if alpha < 1:
                 self.after(self.__fade_ms, lambda: self.fadein(min(alpha + self.__fade_inc, 1)))
 
-    def fadeout(self, alpha:float, event:tk.Event=None):
+    def fadeout(self, alpha:float, event:Event=None):
         #if event then this call came from target 
         #~ we can consider this a "fresh/new" call
         if event is not None:
