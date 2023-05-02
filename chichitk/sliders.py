@@ -225,6 +225,12 @@ class TimeSlider(Frame):
         self.__frame_num = frame_num
         self.__end_label.config(text=seconds_text(self.__frame_num / self.__steps_per_sec))
 
+    def set_steps_per_sec(self, steps_per_sec:float):
+        '''updates steps per sec without changing the number of steps'''
+        self.__steps_per_sec = steps_per_sec
+        self.__label.config(text=seconds_text(self.__Slider.get() * self.__frame_num / self.__steps_per_sec))
+        self.__end_label.config(text=seconds_text(self.__frame_num / self.__steps_per_sec))
+
     def get(self) -> int:
         '''returns the current frame'''
         return int(self.__frame_num * self.__Slider.get())
