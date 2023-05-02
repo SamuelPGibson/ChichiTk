@@ -336,7 +336,7 @@ class LabelSlider(Frame):
         if self.__popup_label is not None:
             popup_font_name = popup_font_name if popup_font_name is not None else font_name
             popup_font_size = popup_font_size if popup_font_size is not None else font_size
-            self.tool_tip = ToolTip(self, bg=popup_bg, fg='#ffffff',
+            self.tool_tip = ToolTip(self.Text, bg=popup_bg, fg='#ffffff',
                                     font=(popup_font_name, popup_font_size))
             self.Text.bind('<Enter>', self.__text_hover_enter)
             self.Text.bind('<Leave>', self.__text_hover_leave)

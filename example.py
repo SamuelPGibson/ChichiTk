@@ -105,7 +105,7 @@ class LeftFrame(Frame):
                                                 inactive_fg='#ffffff',
                                                 padx=5, pady=5)
         collapse_frame.pack(side='bottom', fill='both')
-        params = [{'label':'Slider 1', 'value':10, 'min_value':0, 'max_value':50, 'step':1},
+        params = [{'label':'Slider 1', 'value':10, 'min_value':0, 'max_value':50, 'step':1, 'description':'Slider 1 description here'},
                   {'label':'Slider 2', 'value':20, 'min_value':0, 'max_value':50, 'step':1},
                   {'label':'Slider 3', 'value':30, 'min_value':0, 'max_value':50, 'step':1}]
         group = chichitk.HorizontalSliderGroup(collapse_frame.frame, params,
