@@ -38,10 +38,10 @@ class Header(Frame):
         OptionGroup(self, bg).pack(side='right')
         OptionGroup(self, bg).pack(side='left')
 
-        player = chichitk.Player(self, lambda x: None, 1, bg=bg,
-                                 slider_type='simple', frame_num=120,
-                                 frame_rate=1, step_increment=5,
-                                 buttons_on_top=True)
+        player = chichitk.Player(self, lambda x: None, 1/100, bg=bg,
+                                 slider_type='simple', frame_num=12001,
+                                 frame_rate=1, step_increment=500,
+                                 buttons_on_top=True, simple_slider_width=300)
         player.pack(side='top')
 
 class Footer(Frame):
@@ -97,6 +97,16 @@ class LeftFrame(Frame):
     def __init__(self, master):
         super().__init__(master, bg=colors[1])
 
+        # Slider Group - Bottom
+        params = [{'label':'Slider 1', 'value':10, 'min_value':0, 'max_value':50, 'step':1},
+                  {'label':'Slider 2', 'value':20, 'min_value':0, 'max_value':50, 'step':1},
+                  {'label':'Slider 3', 'value':30, 'min_value':0, 'max_value':50, 'step':1}]
+        group = chichitk.HorizontalSliderGroup(self, params, callback=print, bg=colors[1], rows=1, columns=3,
+                                               active_line_color='#00ff00', hide_slider=False,
+                                               label_draggable=True, text_fg='#ffffff',
+                                               slider_type='rectangle', slider_width=25, slider_height=8)
+        group.pack(side='bottom', fill='x')
+
         # Widgets Frame - Bottom
         collapse_frame = chichitk.CollapseFrame(self, label='Select Widgets', label_side='top',
                                                 font_name='Segoe UI bold', font_size=14,
@@ -111,7 +121,7 @@ class LeftFrame(Frame):
         for i in range(4):
             frame.grid_rowconfigure(i, weight=1)
 
-        for i, label in enumerate(['Dropdown', 'Check Entry', 'Color Entry', 'Upload File', 'Range Labels']):
+        for i, label in enumerate(['Dropdown', 'Check Entry', 'Color Entry', 'Upload File', 'Range Labels', 'Slider']):
             Label(frame, text=label, bg=colors[1], fg='#ffffff',
                   font=('Segoe UI', 11)).grid(row=i, column=0)
         dropdown = chichitk.BasicDropDown(frame, ['Option 1', 'Option 2', 'Option 3'],
@@ -123,7 +133,14 @@ class LeftFrame(Frame):
         number = chichitk.RangeLabel(frame, default_min=20, default_max=30,
                                      bg=colors[0], fg='#ffffff',
                                      hover_bg=colors[2])
-        for i, widget in enumerate([dropdown, entry, color_entry, upload, number]):
+        slider = chichitk.HorizontalSlider(frame, callback=print, bg=colors[0],
+                                           min_value=10, max_value=50, default_value=25,
+                                           active_line_color='#ffffff',
+                                           active_line_hover_color='#00ff00',
+                                           hide_slider=True, slider_type='circle',
+                                           label_draggable=True, label_fg='#ffffff',
+                                           text_fg='#ffffff', label='', step=0.1)
+        for i, widget in enumerate([dropdown, entry, color_entry, upload, number, slider]):
             widget.grid(row=i, column=1, pady=2, sticky='nsew')
 
         # Textbox - Top
