@@ -46,6 +46,7 @@ class Player(Frame):
         self.__end_callback = end_callback
         self.__frame_rate = frame_rate
         self.__step_increment = step_increment
+        self.__slider_type = slider_type
         super().__init__(master, bg=bg)
 
         # compute sides for widget packing
@@ -118,6 +119,8 @@ class Player(Frame):
         '''updates delay of timer
         intended for when Player is not being used to play video frames'''
         self.__Timer.set_delay(delay)
+        if self.__slider_type == 'simple':
+            self.__Slider.set_steps_per_sec(1 / delay)
 
     def set_increment(self, inc:int):
         '''sets number of steps to skip when 'skip forward' and 'skip back'
