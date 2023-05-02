@@ -98,10 +98,19 @@ class LeftFrame(Frame):
         super().__init__(master, bg=colors[1])
 
         # Slider Group - Bottom
+        collapse_frame = chichitk.CollapseFrame(self, label='Horizontal Sliders', label_side='top',
+                                                font_name='Segoe UI bold', font_size=14,
+                                                bg=colors[1], active_bg=colors[0], inactive_hover_bg=colors[1],
+                                                active_hover_bg=colors[2], inactive_hover_fg='#00ff00',
+                                                inactive_fg='#ffffff',
+                                                padx=5, pady=5)
+        collapse_frame.pack(side='bottom', fill='both')
         params = [{'label':'Slider 1', 'value':10, 'min_value':0, 'max_value':50, 'step':1},
                   {'label':'Slider 2', 'value':20, 'min_value':0, 'max_value':50, 'step':1},
                   {'label':'Slider 3', 'value':30, 'min_value':0, 'max_value':50, 'step':1}]
-        group = chichitk.HorizontalSliderGroup(self, params, callback=print, bg=colors[1], rows=1, columns=3,
+        group = chichitk.HorizontalSliderGroup(collapse_frame.frame, params,
+                                               callback=lambda x, y: None,
+                                               bg=colors[1], rows=1, columns=3,
                                                active_line_color='#00ff00', hide_slider=False,
                                                label_draggable=True, text_fg='#ffffff',
                                                slider_type='rectangle', slider_width=25, slider_height=8)
@@ -110,7 +119,7 @@ class LeftFrame(Frame):
         # Widgets Frame - Bottom
         collapse_frame = chichitk.CollapseFrame(self, label='Select Widgets', label_side='top',
                                                 font_name='Segoe UI bold', font_size=14,
-                                                bg=colors[1], inactive_hover_bg=colors[1],
+                                                bg=colors[1], active_bg=colors[0], inactive_hover_bg=colors[1],
                                                 active_hover_bg=colors[2], inactive_hover_fg='#00ff00',
                                                 inactive_fg='#ffffff',
                                                 padx=5, pady=5)
@@ -133,7 +142,7 @@ class LeftFrame(Frame):
         number = chichitk.RangeLabel(frame, default_min=20, default_max=30,
                                      bg=colors[0], fg='#ffffff',
                                      hover_bg=colors[2])
-        slider = chichitk.HorizontalSlider(frame, callback=print, bg=colors[0],
+        slider = chichitk.HorizontalSlider(frame, bg=colors[0],
                                            min_value=10, max_value=50, default_value=25,
                                            active_line_color='#ffffff',
                                            active_line_hover_color='#00ff00',
