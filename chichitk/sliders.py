@@ -3,9 +3,11 @@ from tkinter import Canvas, Frame, Label
 import numpy as np
 
 from .tool_tip import ToolTip
-from .labels import EditLabel
+from .labels import NumberEditLabel
 from .canvas_items import CanvasEditLine, CanvasEditFill, brighten
 
+__all__ = ['Slider', 'TimeSlider', 'HorizontalSlider', 'VerticalSlider',
+           'HorizontalSliderGroup', 'VerticalSliderGroup', 'PlotScrollBar', 'DoubleScrollBar']
 
 # helper functions
 def seconds_text(sec:float):
@@ -15,586 +17,482 @@ def seconds_text(sec:float):
         return f'{sec // 3600}:{(sec % 3600) // 60:0>2}:{(sec % 60) // 1:0>2}'
     else: # less than one hour
         return f'{sec // 60}:{(sec % 60) // 1:0>2}'
-    
 
-class BasicSlider(Frame):
-    ''' Parent class of HorizontalSlider and VerticalSlider - contains common
-        methods
-        
-        DO NOT use this class directly because it will not work
+
+class Slider(Canvas):
+    ''' Basic slider that takes values between 0 and 1
+
+        Can be configured horizontally or vertically with circle or rectangle
+        slider.
     '''
-    def __init__(self, master:Frame, command, bg:str, min_value:float,
-                 max_value:float, step:float, start_value=0, padx=0, pady=0,
-                 slider_ac='#13ce12', slider_ic='#ffffff', line_ac='#999999',
-                 line_ic='#888888', slider_height=20, slider_width=35, active=True):
+    def __init__(self, master:Frame, callback=None, default_value=0, bg='#000000',
+                 line_color='#555555', active_line_color=None, active_line_hover_color=None,
+                 slider_color='#ffffff', slider_drag_color=None, hide_slider=False,
+                 slider_visible=True, slider_height=20, slider_width=20, slider_type='circle',
+                 orientation='h', line_width=2, height=0, width=0, **kwargs):
         '''
         Parameters
         ----------
             :param master: tk.Frame - parent widget
-            :param command: function (value) - called when slider is moved
+            :param callback: function (float) - called only when slider is moved by user
+            :param default_value: float between 0 and 1 - initial slider value
             :param bg: str (hex code) - background color
-            :param min_value: float - slider minimum value
-            :param max_value: float - slider maximum value
-            :param step: float - slider increment
-            :param start_value: float - default value
-            :param padx: int - internal x pad
-            :param pady: int - internal y pad
-            :param slider_ac: str (hex code) - slider color while being dragged
-            :param slider_ic: str (hex code) - slider color when not dragging
-            :param line_ac: str (hex code) - line color when cursor is hovering
-            :param line_ic: str (hex code) - line color when not hovering
-            :param slider_height: int - height of slider in pixels
+            :param line_color: str (hex code) - color of line
+            :param active_line_color: str (hex code) - color of active portion of line (if different from line_color)
+            :param active_line_hover_color: str (hex code) - color of active portion of line when hovering
+                                                           - if different from active_line_color
+            :param slider_color: str (hex code) - slider color
+            :param slider_drag_color: str (hex code) - slider color when mouse is depressed (if different from slider color)
+            :param hide_slider: bool - if True, slider is hidden when cursor is not hovering
+            :param slider_visible: bool - if False, slider is never visible
+            :param slider_height: int - height of slider in pixels (or diameter for circle slider)
             :param slider_width: int - width of slider in pixels
-            :param active: bool - if True, slider is interactable by user
+            :param slider_type: Literal['circle', 'rectangle'] - type of slider
+            :param orientation: Literal['h', 'v'] - horizontal or vertical orientation
+            :param line_width: int - width of slider line in pixels
+            :param height: int - canvas height in pixels
+            :param width: int - canvas width in pixels
         '''
-        self.active = active
-        self.command = command
-        if step % 1 == 0: # integer
-            self.decimals = 0
-        else:
-            self.decimals = len(str(step).split(".")[1])
-        self.slider_colors = [slider_ic, slider_ac]
-        self.line_colors = [line_ic, line_ac]
-        self.hovering, self.slider_hovering, self.dragging = False, False, False
-        self.min, self.max, self.current_value, self.step = min_value, max_value, start_value, step
-        self.values = np.arange(self.min, self.max + self.step * 0.9, self.step)
-        self.slider_height, self.slider_width = slider_height, slider_width
-        Frame.__init__(self, master, bg=bg, padx=padx, pady=pady)
+        assert slider_type in ['circle', 'rectangle'], f'Slider Error: Invalid slider type: {slider_type}'
+        assert orientation in ['h', 'v'], f'Slider Error: Invalid orientation: {orientation}'
+        assert default_value >= 0 and default_value <= 1, f'Default value must be between 0 and 1, not {default_value}'
+        if slider_type == 'circle' and slider_height != slider_width: # not a circle (not fatal)
+            print(f'Slider Warning: Initiated circle slider but slider height ({slider_height}) does not equal slider width ({slider_width})')
+        canvas_height = slider_height if orientation == 'h' else height
+        canvas_width = slider_width if orientation == 'v' else width
+        super().__init__(master, bg=bg, highlightthickness=0,
+                         height=canvas_height, width=canvas_width, **kwargs)
+        self.__value = default_value
+        self.__callback = callback
+        self.__orientation = orientation
+        self.__slider_type = slider_type
+        self.__slider_height, self.__slider_width = slider_height, slider_width
+        self.__active_line_color = active_line_color if active_line_color is not None else line_color
+        self.__hover_line_color = active_line_hover_color if active_line_hover_color is not None else self.__active_line_color
+        self.__slider_color = slider_color if slider_color is not None else self.__active_line_color
+        self.__slider_drag_color = slider_drag_color if slider_drag_color is not None else self.__slider_color
+        self.__slider_state = 'hidden' if hide_slider or not slider_visible else 'disabled' # when not hovering
+        self.__slider_hover_state = 'disabled' if slider_visible else 'hidden' # when hovering
+        self.__dragging = False
 
-    def color_config(self):
-        '''updates color of line and slider based on hover and drag status'''
-        self.canvas.itemconfig(self.line_id, fill=self.line_colors[self.hovering or self.dragging])
-        self.canvas.itemconfig(self.slider_id, fill=self.slider_colors[self.slider_hovering or self.dragging])
-
-    def get_value_text(self) -> str:
-        '''returns value text formatted as string'''
-        if self.decimals == 0:
-            return str(int(self.current_value))
-        text = str(round(self.current_value, self.decimals))
-        if '.' in text:
-            dec = len(text.split(".")[1])
-        else:
-            text += '.'
-            dec = 0
-        return text + '0' * (self.decimals - dec)
-    
-    def get_value(self):
-        '''returns slider value'''
-        return self.current_value
-
-    def set_value(self, value:float, callback=False):
-        '''
-        Purpose:
-            sets the value of slider
-            called when slider is moved (with drag) or EditLabel is updated
-        Pre-conditions:
-            :param value: float - new value of slider
-            :param callback: bool - if True calls self.command(value)
-        Post-conditions:
-            changes the value of slider
-        Returns:
-            (none)
-        '''
-        self.current_value = value
-        self.canvas.coords(self.slider_id, *self.get_slider_coords())
-        self.label.set_text(text=self.get_value_text(), callback=False)
-        if callback:
-            self.command(self.current_value)
-
-    def round_value(self, value:float):
-        '''
-        Purpose:
-            rounds value to the closest acceptable value based on self.values
-            intended to be called when value is set manually with EditLabel
-        Pre-conditions:
-            :param value: float - new value
-        Post-conditions:
-            (none)
-        Returns:
-            :return: float or int - new rounded value
-        '''
-        return self.values[np.absolute(self.values - value).argmin()]
-
-    def slider_hover_enter(self, event=None):
-        '''called when cursor hovers on the slider'''
-        if self.active:
-            self.slider_hovering = True
-            self.color_config()
-
-    def slider_hover_leave(self, event=None):
-        '''called when cursor leaves the slider'''
-        if self.active:
-            self.slider_hovering = False
-            self.color_config()
-
-    def label_hover_enter(self, event=None):
-        '''called when cursor enters the label'''
-        if self.popup_label:
-            self.tool_tip.fadein(0, self.popup_label, event)
-
-    def label_hover_leave(self, event=None):
-        '''called when cursor enters the label'''
-        if self.popup_label:
-            self.tool_tip.fadeout(1, event) # first argument is initial alpha
-
-    def hover_enter(self, event=None):
-        '''called when cursor enters the widget'''
-        if self.active:
-            self.hovering = True
-            self.color_config()
-
-    def hover_leave(self, event=None):
-        '''called when cursor leaves the widget'''
-        if self.active:
-            self.hovering = False
-            self.color_config()
-
-    def click(self, event):
-        '''cursor clicks on canvas - move slider to click location'''
-        if self.active:
-            self.dragging = True
-            self.color_config()
-            value = self.get_cursor_value(event.x, event.y)
-            if value != self.current_value:
-                self.set_value(value, callback=True)
-
-    def release(self, event=None):
-        '''cursor releases click on the canvas'''
-        if self.active:
-            self.dragging = False
-            self.color_config()
-
-    def motion(self, event):
-        '''called when cursor drags slider'''
-        if self.active:
-            value = self.get_cursor_value(event.x, event.y)
-            if value != self.current_value:
-                self.set_value(value, callback=True)
-
-    def turn_on(self):
-        '''called externally to make slider interactable by user'''
-        self.active = True
-        self.label.set_active()
-
-    def turn_off(self):
-        '''called externally to make slider uninteractable by user'''
-        self.active = False
-        self.label.set_inactive()
-
-class HorizontalSlider(BasicSlider):
-    ''' Horizontally oriented slider - user slides from left to right
-
-        User can double slick on the value label to enter an exact value
-    
-        Calls callback command whenever slider is moved by user
-    '''
-    def __init__(self, master:Frame, label:str, command, bg:str,
-                 min_value:float, max_value:float, step:float, start_value=0,
-                 popup_label=None, padx:int=0, pady:int=0, width:int=250,
-                 slider_ac='#13ce12', slider_ic='#ffffff', line_ac='#999999',
-                 line_ic='#888888', text_color='#888888', popup_bg='#000000',
-                 font_name='Segoe UI', label_font_size=14, val_font_size=11,
-                 slider_height=35, slider_width=20, line_width=10,
-                 justify='right', title_label=False, active=True):
-        '''Horizontal Slider
+        # Draw Lines and Slider
+        self.__line_id = self.create_line(0, 0, 0, 0, fill=line_color,
+                                          width=line_width, state='disabled')
+        self.__active_line_id = self.create_line(0, 0, 0, 0, fill=self.__active_line_color,
+                                                 width=line_width, state='disabled')
+        if self.__slider_type == 'circle':
+            self.__slider_id = self.create_oval(0, 0, 0, 0, fill=self.__slider_color,
+                                                state=self.__slider_state)
+        elif self.__slider_type == 'rectangle':
+            self.__slider_id = self.create_rectangle(0, 0, 0, 0, fill=self.__slider_color,
+                                                     width=0, state=self.__slider_state)
+            
+        # Event Bindings
+        self.bind("<Button-1>", self.__click)
+        self.bind("<ButtonRelease-1>", self.__release)
+        self.bind("<B1-Motion>", self.__motion)
+        self.bind("<Enter>", self.__hover_enter)
+        self.bind("<Leave>", self.__hover_leave)
+        self.bind('<Configure>', self.__set_coords)
         
-        Parameters
-        ----------
-            :param master: tk.Frame - parent widget
-            :param label: str - label displayed to the left of slider
-            :param command: function (value) - called when slider is moved
-            :param bg: str (hex code) - background color
-            :param min_value: float - slider minimum value
-            :param max_value: float - slider maximum value
-            :param step: float - slider increment
-            :param start_value: float - default value
-            :param popup_label: str - text displayed in info popup upon mouse hover
-            :param padx: int (pixels) - internal x pad
-            :param pady: int (pixels) - internal y pad
-            :param width: int (pixels) - widget width
-            :param slider_ac: str (hex code) - slider color while being dragged
-            :param slider_ic: str (hex code) - slider color when not dragging
-            :param line_ac: str (hex code) - line color when cursor is hovering
-            :param line_ic: str (hex code) - line color when not hovering
-            :param slider_height: int - height of slider in pixels
-            :param slider_width: int - width of slider in pixels
-            :param text_color: String (hex code) - color of text
-            :param popup_bg: str (hex code) - background color of info popup
-            :param justify: str - slider placement in frame - options: ['left', 'right', 'center']
-            :param title_label: bool - if True, display 'fade_in' as 'Fade In' - convert snake_case to Title Case
-            :param active: bool - if True, slider is interactable by user
-        '''
-        self.width = width
-        BasicSlider.__init__(self, master, command, bg, min_value, max_value,
-                             step, start_value=start_value, padx=padx, pady=pady,
-                             slider_ac=slider_ac, slider_ic=slider_ic,
-                             line_ac=line_ac, line_ic=line_ic,
-                             slider_height=slider_height, slider_width=slider_width,
-                             active=active)
-
-        frame = Frame(self, bg=bg, height=slider_height)
-        if justify == 'center':
-            frame.place(relx=0.5, rely=0.5, anchor='center')
-        else:
-            frame.pack(side=justify)
-        check_function = lambda s: len(s) > 0 and s.count('.') <= 1 and s != '.' and float(s) >= self.min and float(s) <= self.max
-        self.label = EditLabel(frame, self.get_value_text(), fg=text_color, bg=bg, hover_bg=brighten(bg, 0.02),
-                               callback=lambda s: self.set_value(self.round_value(float(s)), callback=True),
-                               check_function=check_function, allowed_chars='0123456789.', editable=self.active,
-                               justify='left', font_name=font_name, font_size=val_font_size)
-        self.label.pack(side='right')
-        self.canvas = Canvas(frame, bg=bg, height=self.slider_height, width=self.width, highlightthickness=0)
-        self.canvas.pack(side='right')
-        label_text = label.replace('_', ' ').title() if title_label else label # convert from snake_case to Title Case
-        self.popup_label = label_text + ': ' + popup_label if popup_label else popup_label
-        slider_label = Label(frame, text=label_text, bg=bg, fg=text_color, font=(font_name, label_font_size))
-        slider_label.pack(side='right')
-        self.tool_tip = ToolTip(self, bg=popup_bg, fg='#ffffff', font=(font_name, val_font_size))
-        slider_label.bind('<Enter>', self.label_hover_enter)
-        slider_label.bind('<Leave>', self.label_hover_leave)
-
-        self.canvas.bind('<Enter>', self.hover_enter)
-        self.canvas.bind('<Leave>', self.hover_leave)
-        self.canvas.bind('<Button-1>', self.click)
-        self.canvas.bind('<B1-Motion>', self.motion)
-        self.canvas.bind('<ButtonRelease-1>', self.release)
-
-        self.line_id = self.canvas.create_line(self.slider_width / 2, self.slider_height / 2, self.width - self.slider_width / 2,
-                                                self.slider_height / 2, fill=self.line_colors[0],
-                                                width=line_width, state='disabled')
-        self.slider_id = self.canvas.create_rectangle(*self.get_slider_coords(), fill=self.slider_colors[0], width=0, state='normal')
-        self.canvas.tag_bind(self.slider_id, '<Enter>', self.slider_hover_enter)
-        self.canvas.tag_bind(self.slider_id, '<Leave>', self.slider_hover_leave)
-
-    def get_value_text(self) -> str:
-        '''returns value text formatted as string - overrides same function in BasicSlider'''
-        if self.decimals == 0:
-            return str(int(self.current_value)) + '  ' * (len(str(int(self.max))) - len(str(int(self.current_value))))
-        text = str(round(self.current_value, self.decimals))
-        if '.' in text:
-            dec = len(text.split(".")[1])
-        else:
-            text += '.'
-            dec = 0
-        return text + '0' * (self.decimals - dec) + '  ' * (len(str(int(self.max))) - len(str(int(self.current_value))))
-
-    def get_slider_coords(self):
-        '''returns x0, y0, x1, and y1 for slider based on self.current_value'''
-        perc = (self.current_value - self.min) / (self.max - self.min)
-        x_center = self.slider_width / 2 + (self.width - self.slider_width) * perc
-        return x_center - self.slider_width / 2, 0, x_center + self.slider_width / 2, self.slider_height
-
-    def get_cursor_value(self, x, y):
-        '''returns current_value based on x, y'''
-        perc = (x - self.slider_width / 2) / (self.width - self.slider_width)
-        value = self.min + (self.max - self.min) * perc
-        return self.values[np.absolute(self.values - value).argmin()]
-
-class VerticalSlider(BasicSlider):
-    ''' Vertically oriented slider - user slides from bottom to top
-    
-        User can double click on the value label to enter an exact value
-        
-        Calls callback command whenever slider is moved by user
-    '''
-    def __init__(self, master:Frame, label:str, command, bg:str,
-                 min_value:float, max_value:float, step:float, start_value=0,
-                 popup_label=None, padx=0, pady=0, height=250, slider_ac='#13ce12',
-                 slider_ic='#ffffff', line_ac='#999999', line_ic='#888888',
-                 text_color='#888888', popup_bg='#000000', font_name='Segoe UI',
-                 label_font_size=14, val_font_size=11, title_label=False,
-                 slider_height=20, slider_width=35, line_width=10, active=True):
-        '''Vertical Slider - inherits from tk.Frame - does not pack or grid
-        
-        Parameters
-        ----------
-            :param master: tk.Frame - parent widget
-            :param label: str - label displayed to the left of slider
-            :param command: function (value) - called when slider is moved
-            :param bg: str (hex code) - background color
-            :param min_value: float - slider minimum value
-            :param max_value: float - slider maximum value
-            :param step: float - slider increment
-            :param start_value: float - default value
-            :param popup_label: str - text displayed in info popup upon mouse hover
-            :param padx: int (pixels) - internal x pad
-            :param pady: int (pixels) - internal y pad
-            :param height: int (pixels) - widget height
-            :param slider_ac: str (hex code) - slider color while being dragged
-            :param slider_ic: str (hex code) - slider color when not dragging
-            :param line_ac: str (hex code) - line color when cursor is hovering
-            :param line_ic: str (hex code) - line color when not hovering
-            :param slider_height: int - height of slider in pixels
-            :param slider_width: int - width of slider in pixels
-            :param text_color: String (hex code) - color of text
-            :param popup_bg: str (hex code) - background color of info popup
-            :param justify: str - slider placement in frame - options: ['left', 'right', 'center']
-            :param title_label: bool - if True, display 'fade_in' as 'Fade In' - convert snake_case to Title Case
-            :param active: bool - if True, slider is interactable by user
-        '''
-        self.height = height
-        BasicSlider.__init__(self, master, command, bg, min_value, max_value, step, start_value=start_value, padx=padx, pady=pady,
-                                slider_ac=slider_ac, slider_ic=slider_ic, line_ac=line_ac, line_ic=line_ic, slider_height=slider_height,
-                                slider_width=slider_width, active=active)
-
-        label_text = label.replace('_', ' ').title() if title_label else label
-        self.popup_label = label_text + ': ' + popup_label if popup_label else popup_label
-        slider_label = Label(self, text=label_text, bg=bg, fg=text_color, font=(font_name, label_font_size))
-        slider_label.pack(side='top', fill='x')
-        self.tool_tip = ToolTip(self, bg=popup_bg, fg='#ffffff', font=(font_name, val_font_size))
-        slider_label.bind('<Enter>', self.label_hover_enter)
-        slider_label.bind('<Leave>', self.label_hover_leave)
-        check_function = lambda s: len(s) > 0 and s.count('.') <= 1 and s != '.' and float(s) >= self.min and float(s) <= self.max
-        self.label = EditLabel(self, self.get_value_text(), fg=text_color, bg=bg, hover_bg=brighten(bg, 0.02),
-                               callback=lambda s: self.set_value(self.round_value(float(s)), callback=True),
-                               check_function=check_function, allowed_chars='0123456789.', editable=self.active,
-                               justify='center', font_name=font_name, font_size=val_font_size)
-        self.label.pack(side='bottom', fill='x')
-        self.canvas = Canvas(self, bg=bg, height=self.height, width=self.slider_width, highlightthickness=0)
-        self.canvas.pack(side='top')
-        self.canvas.bind('<Enter>', self.hover_enter)
-        self.canvas.bind('<Leave>', self.hover_leave)
-        self.canvas.bind('<Button-1>', self.click)
-        self.canvas.bind('<B1-Motion>', self.motion)
-        self.canvas.bind('<ButtonRelease-1>', self.release)
-    
-        self.line_id = self.canvas.create_line(self.slider_width / 2, self.slider_height / 2, self.slider_width / 2,
-                                                self.height - self.slider_height / 2, fill=self.line_colors[0],
-                                                width=line_width, state='disabled')
-        self.slider_id = self.canvas.create_rectangle(*self.get_slider_coords(), fill=self.slider_colors[0], width=0, state='normal')
-        self.canvas.tag_bind(self.slider_id, '<Enter>', self.slider_hover_enter)
-        self.canvas.tag_bind(self.slider_id, '<Leave>', self.slider_hover_leave)
-
-    def get_slider_coords(self):
-        '''returns x0, y0, x1, and y1 for slider based on self.current_value'''
-        perc = (self.current_value - self.min) / (self.max - self.min)
-        y_center = self.slider_height / 2 + (self.height - self.slider_height) * (1 - perc)
-        return 0, y_center - self.slider_height / 2, self.slider_width, y_center + self.slider_height / 2
-
-    def get_cursor_value(self, x, y):
-        '''returns current_value based on x, y'''
-        perc = (self.height - y - self.slider_height / 2) / (self.height - self.slider_height)
-        value = self.min + (self.max - self.min) * perc
-        return self.values[np.absolute(self.values - value).argmin()]
-
-class SimpleScrollBar(Canvas):
-    ''' Slider that handles integer values between a specified minimum and
-        maximum value
-        
-        Callback command is called whenever slider value is changed by user
-    '''
-    def __init__(self, frame, command, min_value=0, max_value=100, start_value=0,
-                 padx=0.04, pady=5, radius=10, error_margin=0.015, font_size=8,
-                 val_label=False, limit_labels=False, bg='#000000', pack_side='top',
-                 active_color='#13ce12', inactive_color='#888888', dot_color='#ffffff',
-                 text_color='#888888', drag_color='#ffffff', time_mode=False, mouse_wheel=False,
-                 val_label_font_name='Segoe UI bold', val_label_font_size=14,
-                 limit_label_font_name='Segoe UI', limit_label_font_size=12,
-                 value_display_fact=1):
-        '''basic scroll bar to play videos, set parameters, etc
-        
-        Parameters
-        ----------
-            :param frame: tk.Frame - parent widget
-            :param command: function (value) - functions called whenever scrollbar value is changed
-            :param min_value: int - minimum value for slider
-            :param max_value: int - maximum value for slider
-            :param padx: float - x pad as a percentage of widget width
-            :param pady: int - y pad in pixels
-            :param radius: int - radius of draggable circle in pixels
-            :param font_size: int - size of min/max value labels, if there are any
-            :param bg: str (hex code) - slider background color
-            :param active_color: str (hex code) - color for active portion of slider on hover
-            :param inactive_color: str (hex code) - color for inactive portion of slider when cursor is not hovering
-            :param dot_color: str (hex code) - color for inactive portion when not hovering and dot when hovering
-            :param text_color: str (hex code) - color of text
-            :param error_margin: float - cursor will be considered on the slider if it is within (error_margin * plot width) of slider position
-            :param mouse_wheel: bool - make scrollbar scrollable using mouse wheel
-            :param value_display_fact: float - values are multiplied by this fact only when being displayed
-                                             - this does not affect the callback function
-        '''
-        self.command = command
-        self.min, self.max = min_value, max_value
-        self.padx, self.pady = padx, pady
-        self.r = radius
-        self.error_margin = error_margin
-        self.font_size = font_size
-        self.val_label, self.limit_labels = val_label, limit_labels
-        self.val_label_font_name, self.val_label_font_size = val_label_font_name, val_label_font_size
-        self.limit_label_font_name, self.limit_label_font_size = limit_label_font_name, limit_label_font_size
-        self.inactive_color = inactive_color
-        self.line_colors = [dot_color, active_color]
-        self.circle_colors = [dot_color, drag_color]
-        self.text_color = text_color
-        self.line_id, self.active_line_id, self.circle_id, self.label_id, self.min_label_id, self.max_label_id, self.width = [None] * 7
-        self.dragging, self.hovering = [False] * 2
-        self.time_mode = time_mode
-        self.active = True
-        self.circle_states = ['hidden', 'normal']
-        self.current_value = start_value
-        self.line_height = self.pady + self.r
-        self.value_display_fact = value_display_fact
-
-        super().__init__(frame, height=(self.pady + self.r) * 2 + 22 * self.val_label,
-                         bg=bg, highlightthickness=0)
-        self.pack(side=pack_side, fill='x')
-        self.bind("<Button-1>", lambda e: self.toggle_circle(e, True))
-        self.bind("<ButtonRelease-1>", lambda e: self.toggle_circle(e, False))
-        self.bind("<B1-Motion>", self.drag_move)
-        self.bind("<Enter>", lambda e: self.update_hover(True))
-        self.bind("<Leave>", lambda e: self.update_hover(False))
-        self.bind('<Configure>', self.frame_width)
-        if mouse_wheel:
-            self.bind('<MouseWheel>', self.mouse_wheel_scroll)
         self.event_generate('<Configure>', when='tail')
 
-    def frame_width(self, event):
-        '''called whenever window is resized'''
-        self.width = event.width
-        self.update_width()
-        self.draw()
+    def __set_coords(self, event=None):
+        '''updates coordinates of lines and slider based on canvas size and current value'''
+        h, w = self.winfo_height(), self.winfo_width()
+        rx, ry = self.__slider_width / 2, self.__slider_height / 2
+        if self.__orientation == 'h': # horizontal
+            x = (w - self.__slider_width) * self.__value + rx
+            y = h / 2
+            self.coords(self.__line_id, rx, y, w - rx, y)
+            self.coords(self.__active_line_id, rx, y, x, y)
+        elif self.__orientation == 'v': # vertical
+            x = w / 2
+            y = h - ry - (h - self.__slider_height) * self.__value
+            self.coords(self.__line_id, w / 2, ry, w / 2, h - ry)
+            self.coords(self.__active_line_id, x, y, x, h - ry)
+        self.coords(self.__slider_id, x - rx, y - ry, x + rx, y + ry)
 
-    def format_text(self, val:int) -> str:
-        '''takes as input either self.max or self.current_value
-        returns str according to self.time_mode'''
-        val = int(round(val * self.value_display_fact, 0))
-        if self.time_mode:
-           return seconds_text(val)
-        else:
-            return str(val)
+    def __get_value(self, x:float, y:float):
+        '''computes value based on (x, y) coordinates'''
+        if self.__orientation == 'h': # horizontal
+            value = (x - self.__slider_width / 2) / (self.winfo_width() - self.__slider_width)
+        elif self.__orientation == 'v': # vertical
+            value = (self.winfo_height() - self.__slider_height / 2 - y) / (self.winfo_height() - self.__slider_height)
+        return max(0, min(1, value))
     
-    def update_width(self):
-        '''called after self.width is updated'''
-        self.xmin = self.width * self.padx + 10 * len(self.format_text(self.max)) * self.limit_labels
-        self.xmax = self.width * (1 - self.padx) - 10 * len(self.format_text(self.max)) * self.limit_labels
+    def __hover_enter(self, event=None):
+        '''cursor enters canvas'''
+        self.itemconfig(self.__active_line_id, fill=self.__hover_line_color)
+        self.itemconfig(self.__slider_id, state=self.__slider_hover_state)
 
-    def set_limits(self, min_value:int, max_value:int):
-        if min_value != self.min or max_value != self.max:
-            self.min, self.max = min_value, max_value
-            self.current_value = min(self.max, max(self.min, self.current_value))
-            self.draw()
+    def __hover_leave(self, event=None):
+        '''cursor leaves canvas'''
+        if not self.__dragging:
+            self.itemconfig(self.__active_line_id, fill=self.__active_line_color)
+            self.itemconfig(self.__slider_id, state=self.__slider_state)
 
-    def set_value(self, value:int, call_command=False):
-        '''moves circle and calls command if value if different from self.current_value'''
-        if self.current_value != value:
-            self.current_value = value
-            x_pos = self.xmin + (self.xmax - self.xmin) * (self.current_value - self.min) / (self.max - self.min)
-            self.coords(self.active_line_id, self.xmin, self.line_height, x_pos, self.line_height)
-            self.coords(self.circle_id, x_pos - self.r, self.line_height - self.r, x_pos + self.r, self.line_height + self.r)
-            if self.val_label:
-                self.itemconfig(self.label_id, text=self.format_text(self.current_value))
-            if self.limit_labels:
-                self.itemconfig(self.min_label_id, text=self.format_text(self.current_value))
-            if call_command:
-                self.command(self.current_value)
+    def __click(self, event):
+        '''cursor clicks on canvas - move slider to click position'''
+        self.__dragging = True
+        self.itemconfig(self.__slider_id, fill=self.__slider_drag_color)
+        self.__value = self.__get_value(event.x, event.y)
+        self.__set_coords()
+        if self.__callback is not None:
+            self.__callback(self.__value)
 
-    def set_frame(self, value:int):
+    def __release(self, event):
+        '''cursor releases click - change slider color to normal'''
+        self.__dragging = False
+        self.itemconfig(self.__slider_id, fill=self.__slider_color)
+        w, h = self.winfo_width(), self.winfo_height()
+        if event.x < 0 or event.x > w or event.y < 0 or event.y > h: # not hovering
+            self.__hover_leave()
+
+    def __motion(self, event):
+        '''cursor drags slider'''
+        self.__value = self.__get_value(event.x, event.y)
+        self.__set_coords()
+        if self.__callback is not None:
+            self.__callback(self.__value)
+
+    def set(self, value:float):
+        '''sets slider value - must be between 0 and 1 (does not call callback function)'''
+        assert value >= 0 and value <= 1, f'Slider Error: set slider to invalid value: {value}'
+        self.__value = value
+        self.__set_coords()
+
+    def get(self):
+        '''returns current slider value'''
+        return self.__value
+
+class TimeSlider(Frame):
+    ''' Combines Slider with two labels to display a time slider.
+    
+        There can be multiple steps per second. The callback function is given
+        the current step not the current time
+    '''
+    def __init__(self, master:Frame, callback=None, frame_num=100, start_frame=0,
+                 steps_per_sec=1, bg='#000000', fg='#888888',
+                 val_font_name='Segoe UI', limit_font_name='Segoe UI',
+                 val_font_size=12, limit_font_size=12, **kwargs):
         '''
-        doubles self.set_value - necessary because this was designed stupidly
-        does not call callback command
+        Parameters
+        ----------
+            :param master: tk.Frame - parent widget
+            :param callback: function (int) - called when slider is moved
+            kwargs are passed to Slider (not Frame)
         '''
-        self.set_value(value, call_command=False)
+        super().__init__(master, bg=bg)
+        self.__callback = callback
+        self.__frame_num = frame_num
+        self.__steps_per_sec = steps_per_sec
 
-    def set_frame_num(self, max_value:int, frame_rate):
-        '''for consistency with PlotScrollbar'''
-        self.set_limits(0, max_value)
+        # End Time Label - Right
+        self.__end_label = Label(self, text=seconds_text(frame_num / steps_per_sec),
+                                 bg=bg, fg=fg, font=(limit_font_name, limit_font_size))
+        self.__end_label.pack(side='right')
 
-    def turn_on(self, override=True):
+        # Current Time Label - Left
+        self.__label = Label(self, text=seconds_text(start_frame / steps_per_sec),
+                             bg=bg, fg=fg, font=(val_font_name, val_font_size))
+        self.__label.pack(side='left')
+
+        # Slider - Center
+        self.__Slider = Slider(self, self.__slider_callback,
+                               default_value=start_frame / frame_num, bg=bg,
+                               orientation='h', **kwargs)
+        self.__Slider.pack(side='left', fill='x', expand=True)
+
+    def __slider_callback(self, perc:float):
+        '''called when slider is moved by user
+        :param perc: float between 0 and 1 - new slider value
         '''
-        makes slider interactable by user
-        if override is True, will turn on even if already on
+        frame = self.__frame_num * perc
+        self.__label.config(text=seconds_text(frame / self.__steps_per_sec))
+        if self.__callback is not None:
+            self.__callback(int(frame))
+
+    def set_frame(self, frame:int):
+        '''sets current step - does not call callback function'''
+        assert frame <= self.__frame_num, f'TimeSlider Error: Tried to set frame to {frame} which is greater than max frame: {self.__frame_num}'
+        self.__Slider.set(frame / self.__frame_num)
+        self.__label.config(text=seconds_text(frame / self.__steps_per_sec))
+
+    def set_frame_num(self, frame_num:int, frame_rate):
+        '''sets max frame - frame_rate is just there for consistency with Scrollbars'''
+        self.__Slider.set(self.__frame_num * self.__Slider.get() / frame_num)
+        self.__frame_num = frame_num
+        self.__end_label.config(text=seconds_text(self.__frame_num / self.__steps_per_sec))
+
+    def get(self) -> int:
+        '''returns the current frame'''
+        return int(self.__frame_num * self.__Slider.get())
+    
+    def get_sec(self) -> float:
+        '''returns current slider position in seconds'''
+        return self.__frame_num * self.__Slider.get() / self.__steps_per_sec
+
+class LabelSlider(Frame):
+    ''' Combination of Slider and NumberEditLabel so that slider value can be
+        seen by the user.
+
+        LabelSlider can handle any range of values, unlike Slider, which only
+        handles values between 0 and 1.
+
+        LabelSlider has three components: slider, number label, and text label.
+        The number label displays the current value and text label is static.
+
+        DO NOT user LabelSlider directly. It is only for inheritance from
+        HorizontalSlider and VerticalSlider.
+    '''
+    def __init__(self, master:Frame, child_frame=None, callback=None, bg='#ffffff',
+                 label:str='', popup_label=None, font_name='Segoe UI', font_size=10,
+                 text_fg='#000000', popup_bg='#000000', popup_font_name=None,
+                 popup_font_size=None, min_value=0, max_value=100, step=1, default_value=None,
+                 label_editable=True, label_draggable=False, reference_width=2.0,
+                 max_len=None, drag_threshold=0.2, label_justify='left', label_bg=None,
+                 label_fg=None, label_hover_bg:str=None, label_error_color='#ff0000',
+                 line_color='#555555', active_line_color=None, active_line_hover_color=None,
+                 slider_color='#ffffff', slider_drag_color=None, hide_slider=False,
+                 slider_visible=True, slider_height=20, slider_width=20, slider_type='circle',
+                 orientation='h', line_width=2, canvas_height=0, canvas_width=0,
+                 **kwargs):
         '''
-        if override or not self.active:
-            self.active = True
-            self.itemconfig(self.circle_id, fill=self.inactive_color)
-            if self.val_label:
-                self.itemconfig(self.label_id, fill='#ffffff')
+        Parameters
+        ----------
+            :param master: tk.Frame - parent widget
+            :param child_frame: tk.Frame - to optionally put widgets in a frame other than self
+            :param callback: function (int|float), called when value is changed
 
-    def turn_off(self, override=True):
+        Slider Parameters
+        -----------------
+            :param line_color: str (hex code) - color of line
+            :param active_line_color: str (hex code) - color of active portion of line (if different from line_color)
+            :param active_line_hover_color: str (hex code) - color of active portion of line when hovering
+                                                           - if different from active_line_color
+            :param slider_color: str (hex code) - slider color
+            :param slider_drag_color: str (hex code) - slider color when mouse is depressed (if different from slider color)
+            :param hide_slider: bool - if True, slider is hidden when cursor is not hovering
+            :param slider_visible: bool - if False, slider is never visible
+            :param slider_height: int - height of slider in pixels (or diameter for circle slider)
+            :param slider_width: int - width of slider in pixels
+            :param slider_type: Literal['circle', 'rectangle'] - type of slider
+            :param orientation: Literal['h', 'v'] - horizontal or vertical orientation
+            :param line_width: int - width of slider line in pixels
+            :param canvas_height: int - slider canvas height in pixels
+            :param canvas_width: int - slider canvas width in pixels
+
+        Label Parameters
+        ----------
+            :param min_value: int or float - minimum value
+            :param max_value: int or float - maximum value
+            :param step: int or float - number increment
+            :param default_value: int or float - default value if different from min_value
+            :param label_editable: bool - if True, label can be double clicked to enter exact value
+            :param label_draggable: bool - if True, label can be dragged to adjust value
+            :param reference_width: float - fraction of label width
+            :param max_len: int - maximum number of characters in entry box
+            :param drag_threshold: float (seconds) - click duration to be considered a single click (not drag)
+            :param label_justify: Literal['left', 'right', 'center'] - justification in label entry box
+            :param label_bg: str (hex code) - label background color (if different from bg)
+            :param label_fg: str (hex code) - label text color (if different from text_fg)
+            :param label_hover_bg: str (hex code) - label background color when hovering (if different from label_bg)
+            :param label_error_color: str (hex code) - background color in entry box for bad text
         '''
-        makes slider uninteractable by user
-        if override is True, will turn off even if already off
+        if child_frame is None: # dont need to init Frame if nothing is being put in it
+            super().__init__(master, bg=bg, **kwargs)
+        self.__callback = callback
+
+        child_frame = child_frame if child_frame is not None else self
+
+        # Slider
+        self.Slider = Slider(child_frame, self.__slider_callback,
+                             bg=bg, line_color=line_color, active_line_color=active_line_color,
+                             active_line_hover_color=active_line_hover_color,
+                             slider_color=slider_color, slider_drag_color=slider_drag_color,
+                             hide_slider=hide_slider, slider_visible=slider_visible,
+                             slider_height=slider_height, slider_width=slider_width,
+                             slider_type=slider_type, orientation=orientation,
+                             height=canvas_height, width=canvas_width,
+                             line_width=line_width)
+        
+        # Number Label
+        label_bg = label_bg if label_bg is not None else bg
+        label_fg = label_fg if label_fg is not None else text_fg
+        label_hover_bg = label_hover_bg if label_hover_bg is not None else label_bg
+        self.Label = NumberEditLabel(child_frame, self.__label_callback, min_value=min_value,
+                                     max_value=max_value, step=step, default_value=default_value,
+                                     reference_width=reference_width, max_len=max_len,
+                                     drag_threshold=drag_threshold, draggable=label_draggable,
+                                     editable=label_editable, justify=label_justify,
+                                     bg=label_bg, fg=label_fg, hover_bg=label_hover_bg,
+                                     error_color=label_error_color,
+                                     font_name=font_name, font_size=font_size)
+        
+        # Static Text Label
+        self.__popup_label = popup_label
+        self.Text = Label(child_frame, text=label, bg=bg, fg=text_fg, font=(font_name, font_size))
+        if self.__popup_label is not None:
+            popup_font_name = popup_font_name if popup_font_name is not None else font_name
+            popup_font_size = popup_font_size if popup_font_size is not None else font_size
+            self.tool_tip = ToolTip(self, bg=popup_bg, fg='#ffffff',
+                                    font=(popup_font_name, popup_font_size))
+            self.Text.bind('<Enter>', self.__text_hover_enter)
+            self.Text.bind('<Leave>', self.__text_hover_leave)
+        
+        # Set Slider Value
+        self.Slider.set(self.Label.get_perc())
+
+    def __text_hover_enter(self, event=None):
+        '''called when cursor enters the label'''
+        if self.__popup_label is not None:
+            self.tool_tip.fadein(0, self.__popup_label, event)
+
+    def __text_hover_leave(self, event=None):
+        '''called when cursor enters the label'''
+        if self.__popup_label is not None:
+            self.tool_tip.fadeout(1, event) # first argument is initial alpha
+        
+    def __slider_callback(self, perc:float):
+        '''called when slider is moved by user
+        :param perc: float between 0 and 1 - slider value
         '''
-        if override or self.active:
-            self.active = False
-            self.itemconfig(self.circle_id, fill=brighten(self.inactive_color, -0.4))
-            if self.val_label:
-                self.itemconfig(self.label_id, fill=brighten(self.inactive_color, -0.4))
+        self.Label.set_perc(perc)
+        if self.__callback is not None:
+            self.__callback(self.Label.get())
 
-    def remove(self):
-        '''removes everything from the canvas'''
-        if self.line_id is not None:
-            self.delete(self.line_id)
-            self.line_id = None
-        if self.active_line_id is not None:
-            self.delete(self.active_line_id)
-            self.active_line_id = None
-        if self.circle_id is not None:
-            self.delete(self.circle_id)
-            self.circle_id = None
-        if self.label_id is not None:
-            self.delete(self.label_id)
-            self.label_id = None
-        if self.min_label_id is not None:
-            self.delete(self.min_label_id)
-            self.min_label_id = None
-        if self.max_label_id is not None:
-            self.delete(self.max_label_id)
-            self.max_label_id = None
+    def __label_callback(self, value:float):
+        '''called when label value is changed by user'''
+        self.Slider.set(self.Label.get_perc())
+        if self.__callback is not None:
+            self.__callback(value)
 
-    def draw(self):
-        '''called when window is resized - redraws canvas according to new size'''
-        if not self.width:
-            return None
-        self.remove()
-        self.line_id = self.create_line(self.xmin, self.line_height, self.xmax, self.line_height,
-                                                fill=brighten(self.inactive_color, -0.4), width=2)
-        x_pos = self.xmin + (self.xmax - self.xmin) * (self.current_value - self.min) / (self.max - self.min)
-        self.active_line_id = self.create_line(self.xmin, self.line_height, x_pos, self.line_height, fill=self.line_colors[0], width=2)
-        self.circle_id = self.create_oval(x_pos - self.r, self.line_height - self.r, x_pos + self.r, self.line_height + self.r,
-                                                    fill=self.circle_colors[0], state='hidden')
-        if self.val_label:
-            self.label_id = self.create_text(self.width / 2, self.pady + self.r * 2 - 1, text=str(self.current_value), fill='#ffffff',
-                                                        font=(self.val_label_font_name, self.val_label_font_size), anchor='n')
-        if self.limit_labels:
-            self.min_label_id = self.create_text(self.xmin - self.r - 2, self.line_height, text=self.format_text(self.current_value),
-                                                        fill=self.inactive_color, font=(self.limit_label_font_name, self.limit_label_font_size),
-                                                        anchor='e')
-            self.max_label_id = self.create_text(self.xmax + self.r + 2, self.line_height, text=self.format_text(self.max),
-                                                        fill=self.inactive_color, font=(self.limit_label_font_name, self.limit_label_font_size),
-                                                        anchor='w')
-        if not self.active:
-            self.turn_off()
+    def set_text(self, text:str):
+        '''sets static text'''
+        self.Text.config(text=text)
 
-    def update_hover(self, hover:bool):
-        '''called when cursor enters or leaves line'''
-        if self.active:
-            self.hovering = hover
-            self.itemconfig(self.active_line_id, fill=self.line_colors[self.hovering or self.dragging])
-            self.itemconfig(self.circle_id, state=self.circle_states[self.hovering or self.dragging])
+    def set_min_value(self, min_value):
+        '''sets minimum value'''
+        self.Label.set_min_value(min_value)
+        self.Slider.set(self.Label.get_perc())
 
-    def toggle_circle(self, event, onclick:bool):
-        '''mouse clicks or releases click anywhere on canvas'''
-        if self.active:
-            self.dragging = onclick
-            self.itemconfig(self.circle_id, fill=self.circle_colors[self.dragging])
-            self.drag_move(event)
-            if not self.dragging and not self.hovering:
-                self.update_hover(False)
+    def set_max_value(self, max_value):
+        '''sets maximum value'''
+        self.Label.set_max_value(max_value)
+        self.Slider.set(self.Label.get_perc())
 
-    def drag_move(self, event):
-        '''called when mouse drags slider'''
-        if self.active:
-            x_perc = (event.x - self.xmin) / (self.xmax - self.xmin)
-            value = self.min + (self.max- self.min) * x_perc
-            self.set_value(int(round(min(self.max, max(self.min, value)), 0)), call_command=True)
+    def set(self, value):
+        '''updates current value'''
+        self.Label.set(value)
+        self.Slider.set(self.Label.get_perc())
 
-    def mouse_wheel_scroll(self, event, fact=1):
-        '''called when mouse wheel is scrolled while mouse hovers on slider'''
-        # event.delta / 120 is float - number of scroll steps - positive for up, negative for down
-        if self.active:
-            value = self.current_value + event.delta / 120 * fact
-            self.set_value(int(min(self.max, max(self.min, value))), call_command=True)
+    def get(self):
+        '''returns current value'''
+        return self.Label.get()
+
+class HorizontalSlider(LabelSlider):
+    ''' Horizontal adaptation of LabelSlider
+    
+        Value label and static text label can be on either side of the slider
+
+        There is the option for LabelSlider to be a single widget, or to grid
+        the children directly in the parent frame. To grid children in the
+        parent frame, specify the 'row' argument.
+    '''
+    def __init__(self, master:Frame, value_left=False, start_col=0, row=None,
+                 slider_pady=0, **kwargs):
+        '''
+        Parameters
+        ----------
+            :param master: tk.Frame - parent frame
+            :param value_left: bool - True to put value label on left side and text on right side
+            :param start_col: int - start column (only if widgets are directly in master)
+            :param row: int - row in master or None to put widgets in self
+        '''
+        child_frame = master if row is not None else None
+        super().__init__(master, child_frame=child_frame, orientation='h', **kwargs)
+
+        if row is not None: # to grid widgets in master
+            if value_left:
+                value_col, text_col = start_col, 2 + start_col
+            else:
+                value_col, text_col = 2 + start_col, start_col
+            slider_col = 1 + start_col
+            self.Slider.grid(row=row, column=slider_col, pady=slider_pady, sticky='ew')
+            self.Label.grid(row=row, column=value_col, pady=slider_pady, sticky='nsew')
+            self.Text.grid(row=row, column=text_col, pady=slider_pady, sticky='nsew')
+        else: # pack in self
+            if value_left:
+                value_side, text_side = 'left', 'right'
+            else:
+                value_side, text_side = 'right', 'left'
+            self.Label.pack(side=value_side)
+            self.Text.pack(side=text_side)
+            self.Slider.pack(side='left', fill='x', expand=True)
+
+class VerticalSlider(LabelSlider):
+    ''' Vertical adaptation of LabelSlider
+    '''
+    def __init__(self, master:Frame, **kwargs):
+        super().__init__(master, orientation='v', label_justify='center', **kwargs)
+
+        self.Label.pack(side='bottom', fill='x') # not sure if this should fill
+        self.Slider.pack(side='bottom', fill='y', expand=True)
+        if 'label' in kwargs.keys() and kwargs['label'] != '': # only pack Text if there is a label
+            self.Text.pack(side='top')
+
+
+class HorizontalSliderGroup(Frame):
+    ''' Group of horizontally oriented sliders connected by a single callback
+        function
+        
+        The callback function is called whenever any of the slider values is
+        changed by the user and is given 2 arguments: (slider_label, new_value)
+    '''
+    def __init__(self, master:Frame, parameters:list, callback, bg='#ffffff',
+                 width=250, slider_pady=5, frame_padx=0, title_label=True,
+                 **kwargs):
+        '''Group of horizontal sliders aranged in a single column
+        
+        Parameters
+        ----------
+            :param master: tk.Frame - frame in which to put slider group
+            :param parameters: list of dicts - each dict contains the keys:
+                        label: str - slider name (given to callback function)
+                        value: float - default value
+                        min_value: float - minimum value
+                        max_value: float - maximum value
+                        step: float - slider increment
+                        description: str - info displayed when mouse hovers on slider (optional)
+            :param callback: function (parameter_name, value) - called whenever a slider is adjusted
+            :param bg: str (hex code) - background color
+            :param width: int - width of each slider in pixels
+            :param slider_pady: int - y pad inside sliders
+            :param frame_padx: int - x pad inside frame
+            :param title_label: bool - if True display 'fade_in' as 'Fade In'
+            **kwargs passed to each slider
+        '''
+        Frame.__init__(self, master, bg=bg, padx=frame_padx)
+        self.grid_columnconfigure(0, weight=0) # text label
+        self.grid_columnconfigure(1, weight=1) # slider
+        self.grid_columnconfigure(2, weight=0) # value label
+        self.sliders: list[HorizontalSlider] = []
+        self.labels = [d['label'] for d in parameters]
+        for i, param in enumerate(parameters):
+            label = param['label'].replace('_', ' ').title() if title_label else param['label']
+            popup_label = param['description'] if 'description' in param.keys() else None
+            S = HorizontalSlider(self, start_col=0, row=i, bg=bg, canvas_width=width,
+                                 callback=lambda x, l=param['label']: callback(l, x),
+                                 min_value=param['min_value'], max_value=param['max_value'],
+                                 step=param['step'], default_value=param['value'],
+                                 label=label, popup_label=popup_label,
+                                 slider_pady=slider_pady, **kwargs)
+            self.sliders.append(S)
+
+    def get(self) -> dict:
+        '''returns dictionary with current value of each slider'''
+        return [{label:slider.get()} for label, slider in zip(self.labels, self.sliders)]
 
 class VerticalSliderGroup(Frame):
     ''' Group of vertically oriented sliders connected by a single callback
@@ -605,10 +503,7 @@ class VerticalSliderGroup(Frame):
     '''
     def __init__(self, master, parameters:list, callback, bg:str, rows:int,
                  columns:int, height=250, slider_pady=5, slider_padx=5,
-                 slider_ac='#13ce12', slider_ic='#ffffff', line_ac='#999999',
-                 line_ic='#888888', text_color='#888888', font_name='Segoe UI',
-                 label_font_size=14, val_font_size=11, slider_height=20,
-                 slider_width=35, line_width=10, title_label=True):
+                 title_label=True, **kwargs):
         '''Group of vertical sliders aranged in rows and columns
         
         Parameters
@@ -626,87 +521,34 @@ class VerticalSliderGroup(Frame):
             :param rows: int - rows of sliders - filling begins rowwise at top left
             :param columns: int - columns of sliders - filling begins rowwise at top left
             :param height: int - height of each slider in pixels
-            :param pady: int - y pad inside each slider
-            :param slider_ac: str (hex code) - color of slider when mouse button is depressed
-            :param slider_ic: str (hex code) - color of slider when mouse button is not depressed
-            :param line_ac: str (hex code) - color of line when mouse is on Canvas
-            :param line_ic: str (hex code) - color of line when mouse is not on Canvas
-            :param text_color: str (hex code) - color of text
+            :param slider_pady: int - y pad between sliders
+            :param slider_padx: int - x pad between sliders
             :param title_label: bool - if True display 'fade_in' as 'Fade In'
+            **kwargs passed to each slider
         '''
         Frame.__init__(self, master, bg=bg)
         for i in range(rows):
             self.grid_rowconfigure(i, weight=1)
         for i in range(columns):
             self.grid_columnconfigure(i, weight=1)
-        self.sliders = []
+        self.sliders: list[VerticalSlider] = []
+        self.labels = [d['label'] for d in parameters]
         for i, param in enumerate(parameters):
-            S = VerticalSlider(self, param['label'], lambda x, l=param['label']: callback(l, x),
-                               bg, param['min_value'], param['max_value'],
-                               param['step'], start_value=param['value'],
-                               popup_label=param['description'], padx=slider_padx,
-                               pady=slider_pady, height=height, slider_ac=slider_ac,
-                               slider_ic=slider_ic, line_ac=line_ac, line_ic=line_ic,
-                               text_color=text_color, font_name=font_name,
-                               label_font_size=label_font_size, val_font_size=val_font_size,
-                               slider_height=slider_height, slider_width=slider_width,
-                               line_width=line_width, title_label=title_label)
-            S.grid(row=i // columns, column=i % columns, sticky='nsew')
+            label = param['label'].replace('_', ' ').title() if title_label else param['label']
+            popup_label = param['description'] if 'description' in param.keys() else None
+            S = VerticalSlider(self, callback=lambda x, l=param['label']: callback(l, x),
+                               min_value=param['min_value'], max_value=param['max_value'],
+                               step=param['step'], default_value=param['value'],
+                               label=label, popup_label=popup_label, bg=bg,
+                               canvas_height=height, **kwargs)
+            S.grid(row=i // columns, column=i % columns, sticky='nsew',
+                   padx=slider_padx, pady=slider_pady)
             self.sliders.append(S)
 
-class HorizontalSliderGroup(Frame):
-    ''' Group of horizontally oriented sliders connected by a single callback
-        function
-        
-        The callback function is called whenever any of the slider values is
-        changed by the user and is given 2 arguments: (slider_label, new_value)
-    '''
-    def __init__(self, master, parameters:list, callback, bg:str,
-                 width=250, slider_pady=5, slider_padx=5,
-                 slider_ac='#13ce12', slider_ic='#ffffff', line_ac='#999999',
-                 line_ic='#888888', text_color='#888888', font_name='Segoe UI',
-                 label_font_size=14, val_font_size=11,
-                 slider_height=35, slider_width=18, line_width=10, title_label=True):
-        '''Group of horizontal sliders aranged in a single column
-        
-        Parameters
-        ----------
-            :param master: tk.Frame - frame in which to put slider group
-            :param parameters: list of dicts - each dict contains the keys:
-                        label: str - slider name (given to callback function)
-                        value: float - default value
-                        min_value: float - minimum value
-                        max_value: float - maximum value
-                        step: float - slider increment
-                        description: str - info displayed when mouse hovers on slider
-            :param callback: function (parameter_name, value) - called whenever a slider is adjusted
-            :param bg: str (hex code) - background color
-            :param width: int - width of each slider in pixels
-            :param pady: int - y pad inside each slider
-            :param slider_ac: str (hex code) - color of slider when mouse button is depressed
-            :param slider_ic: str (hex code) - color of slider when mouse button is not depressed
-            :param line_ac: str (hex code) - color of line when mouse is on Canvas
-            :param line_ic: str (hex code) - color of line when mouse is not on Canvas
-            :param text_color: str (hex code) - color of text
-            :param title_label: bool - if True display 'fade_in' as 'Fade In'
-        '''
-        Frame.__init__(self, master, bg=bg)
-        self.sliders = []
-        for param in parameters:
-            S = HorizontalSlider(self, param['label'], lambda x, l=param['label']: callback(l, x),
-                                 bg, param['min_value'], param['max_value'],
-                                 param['step'], start_value=param['value'],
-                                 popup_label=param['description'], padx=slider_padx,
-                                 pady=slider_pady, width=width, slider_ac=slider_ac,
-                                 slider_ic=slider_ic, line_ac=line_ac, line_ic=line_ic,
-                                 text_color=text_color, font_name=font_name,
-                                 label_font_size=label_font_size, val_font_size=val_font_size,
-                                 justify='right', slider_height=slider_height,
-                                 slider_width=slider_width, line_width=line_width,
-                                 title_label=title_label)
-            S.pack(side='top')
-            self.sliders.append(S)
-    
+    def get(self) -> dict:
+        '''returns dictionary with current value of each slider'''
+        return [{label:slider.get()} for label, slider in zip(self.labels, self.sliders)]
+   
 class PlotScrollBar(Canvas):
     ''' Horizontally oriented plot slider that handles integer values between
         a specified minimum and maximum value
