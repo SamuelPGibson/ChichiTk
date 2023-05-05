@@ -275,6 +275,10 @@ class ToggleIconButton(IconButton):
         if self.toggle_command is not None:
             self.toggle_command(self.selected)
 
+    def get(self) -> bool:
+        '''returns selection status'''
+        return self.selected
+
 class DoubleIconButton(Frame):
     ''' DoubleIconButton contains two IconButtons that swap when clicked.
         There are separate commands for the two IconButtons
