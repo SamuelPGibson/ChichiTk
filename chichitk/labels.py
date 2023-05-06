@@ -289,6 +289,14 @@ class NumberEditLabel(EditLabel):
         self.__max_value = max_value
         self.__values = np.arange(self.__min_value, self.__max_value + self.__step * 0.9, self.__step)
 
+    def get_min_value(self) -> int:
+        '''returns current minimum value'''
+        return self.__min_value
+    
+    def get_max_value(self) -> int:
+        '''returns current maximum value'''
+        return self.__max_value
+
     def __get_text(self, value:int) -> str:
         '''converts value to string based on step and return_type'''
         if self.__decimals == 0: # integer
