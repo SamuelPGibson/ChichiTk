@@ -139,7 +139,7 @@ class LeftFrame(Frame):
         color_entry = chichitk.ColorEntry(frame, bg=colors[0], fg='#ffffff')
         upload = chichitk.FileDialog(frame, '', file_types=['wav', 'mp3'],
                                      bg=colors[0], fg='#ffffff')
-        time = chichitk.TimeEditLabel(frame, print, min_value=0, max_value=600,
+        time = chichitk.TimeEditLabel(frame, min_value=0, max_value=600,
                                       default_value=100, step=0.001, bg=colors[0],
                                       fg='#ffffff', hover_bg=colors[2])
         number = chichitk.RangeLabel(frame, default_min=20, default_max=30,
