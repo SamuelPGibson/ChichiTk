@@ -130,7 +130,7 @@ class LeftFrame(Frame):
         for i in range(4):
             frame.grid_rowconfigure(i, weight=1)
 
-        for i, label in enumerate(['Dropdown', 'Check Entry', 'Color Entry', 'Upload File', 'Range Labels', 'Slider']):
+        for i, label in enumerate(['Dropdown', 'Check Entry', 'Color Entry', 'Upload File', 'Time Label', 'Range Labels', 'Slider']):
             Label(frame, text=label, bg=colors[1], fg='#ffffff',
                   font=('Segoe UI', 11)).grid(row=i, column=0)
         dropdown = chichitk.BasicDropDown(frame, ['Option 1', 'Option 2', 'Option 3'],
@@ -139,6 +139,9 @@ class LeftFrame(Frame):
         color_entry = chichitk.ColorEntry(frame, bg=colors[0], fg='#ffffff')
         upload = chichitk.FileDialog(frame, '', file_types=['wav', 'mp3'],
                                      bg=colors[0], fg='#ffffff')
+        time = chichitk.TimeEditLabel(frame, print, min_value=0, max_value=600,
+                                      default_value=100, step=0.001, bg=colors[0],
+                                      fg='#ffffff', hover_bg=colors[2])
         number = chichitk.RangeLabel(frame, default_min=20, default_max=30,
                                      bg=colors[0], fg='#ffffff',
                                      hover_bg=colors[2])
@@ -149,7 +152,7 @@ class LeftFrame(Frame):
                                            hide_slider=True, slider_type='circle',
                                            label_draggable=True, label_fg='#ffffff',
                                            text_fg='#ffffff', label='', step=0.1)
-        for i, widget in enumerate([dropdown, entry, color_entry, upload, number, slider]):
+        for i, widget in enumerate([dropdown, entry, color_entry, upload, time, number, slider]):
             widget.grid(row=i, column=1, pady=2, sticky='nsew')
 
         # Textbox - Top
