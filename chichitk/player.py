@@ -19,7 +19,8 @@ class Player(Frame):
                  slider_type:str='single', frame_num=1000, frame_rate=29.97,
                  step_increment:int=150, end_callback=None, start_callback=None,
                  stop_callback=None, skip_callback=None, buttons_on_top=False,
-                 buttons_padx_weight=6, simple_slider_width=None):
+                 buttons_padx_weight=6, simple_slider_width=None,
+                 limit_running_callbacks=False):
         ''' Only keeps track of the current frame using Timer
 
         Parameters
@@ -40,13 +41,15 @@ class Player(Frame):
             :param skip_callback: function (current_step) - called when step is incremented
             :param buttons_on_top: bool - True to put buttons on top, or False for bottom
             :param buttons_padx_weight: int - weight of padding for PlayerButtons
-            :param value_display_fact: int - pushed only to SimpleScrollBar
+            :param limit_running_callbacks: bool - if True, does not call callback function immediately when slider is moved while running
+                                                 - to avoid calling the callback function in multiple different threads
         '''
         self.__callback = callback
         self.__end_callback = end_callback
         self.__frame_rate = frame_rate
         self.__step_increment = step_increment
         self.__slider_type = slider_type
+        self.__limit_running_callbacks = limit_running_callbacks
         super().__init__(master, bg=bg)
 
         # compute sides for widget packing
@@ -92,11 +95,13 @@ class Player(Frame):
 
     def step_forward(self):
         '''same as clicking 'skip forward' button in PlayerButtons'''
-        self.__Timer.increment(self.__step_increment, callback=True)
+        self.__Timer.increment(self.__step_increment,
+                               callback=not self.__limit_running_callbacks)
 
     def step_back(self):
         '''same as clicking 'step back' button in PlayerButtons'''
-        self.__Timer.increment(-self.__step_increment, callback=True)
+        self.__Timer.increment(-self.__step_increment,
+                               callback=not self.__limit_running_callbacks)
 
     def set_frame(self, frame:int):
         '''updates the current frame and calls callback function'''
@@ -152,7 +157,8 @@ class Player(Frame):
         '''called when slider is moved by user
         it does not matter whether timer is running or not'''
         self.__Timer.set(step)
-        self.__callback(step)
+        if not self.__limit_running_callbacks or not self.__Timer.is_running():
+            self.__callback(step)
 
     def __end(self):
         '''called when player reaches the end (max step)'''
