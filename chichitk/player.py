@@ -148,6 +148,10 @@ class Player(Frame):
         '''returns frame rate'''
         return self.__frame_rate
 
+    def is_running(self) -> bool:
+        '''returns True if Player is running, otherwise False'''
+        return self.__Timer.is_running()
+
     def __timer_update(self, step:int):
         '''called by timer when playing'''
         self.__Slider.set_frame(step)
