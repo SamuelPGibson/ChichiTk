@@ -95,13 +95,13 @@ class Player(Frame):
 
     def step_forward(self):
         '''same as clicking 'skip forward' button in PlayerButtons'''
-        self.__Timer.increment(self.__step_increment,
-                               callback=not self.__limit_running_callbacks)
+        callback = not self.__limit_running_callbacks or not self.__Timer.is_running()
+        self.__Timer.increment(self.__step_increment, callback=callback)
 
     def step_back(self):
         '''same as clicking 'step back' button in PlayerButtons'''
-        self.__Timer.increment(-self.__step_increment,
-                               callback=not self.__limit_running_callbacks)
+        callback = not self.__limit_running_callbacks or not self.__Timer.is_running()
+        self.__Timer.increment(-self.__step_increment, callback=callback)
 
     def set_frame(self, frame:int):
         '''updates the current frame and calls callback function'''
