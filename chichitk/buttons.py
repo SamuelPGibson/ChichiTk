@@ -365,6 +365,16 @@ class DoubleIconButton(Frame):
         self.switch1()
         self.__command2()
 
+    def turn_on(self):
+        '''makes button interactable'''
+        self.Button1.turn_on()
+        self.Button2.turn_on()
+
+    def turn_off(self):
+        '''makes button uninteractable'''
+        self.Button1.turn_off()
+        self.Button2.turn_off()
+
     def get(self):
         '''returns False if button1 is active and True if button2 is active'''
         return self.__double_status
