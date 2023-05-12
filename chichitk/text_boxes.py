@@ -97,8 +97,7 @@ class TextBox(Frame):
         cursor_color = cursor_color if cursor_color else fg
 
         self.track = Text(self, width=4, height=height, font=(font_name, font_size),
-                          bg=bg, fg=track_fg, wrap='none', bd=0,
-                          yscrollcommand=lambda a, b: self.box.yview_moveto(a))
+                          bg=bg, fg=track_fg, wrap='none', bd=0)
         if line_numbers_labels:
             self.track.pack(side='left', fill='y')
         self.track.insert('end', '  1')
@@ -111,6 +110,9 @@ class TextBox(Frame):
         self.box.tag_add("justify", 1.0, "end")
         self.box.tag_configure('justify', justify=self.justify)
         self.box.bind("<<TextModified>>", self.callback)
+        # must not set yscrollcommand until after self.box is defined
+        # to avoid AttributeError
+        self.track.config(yscrollcommand=lambda a, b: self.box.yview_moveto(a))
         #self.box.bind("<Key>", self.callback)
         if focus_in_function:
             self.box.bind("<FocusIn>", focus_in_function)
