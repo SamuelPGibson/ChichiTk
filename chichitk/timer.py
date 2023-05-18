@@ -109,19 +109,20 @@ class Timer:
             return True
         return False
 
-    def reset(self):
+    def reset(self, callback=True):
         '''resets step to min_step and calls callback function
         does not stop the timer'''
-        self.increment(self.__min_step - self.__current_step, callback=True)
+        self.increment(self.__min_step - self.__current_step, callback=callback)
 
-    def to_end(self):
+    def to_end(self, callback=True):
         '''sets step to max_step, stops timer, and calls callback function'''
         assert self.__max_step is not None, 'Skipped timer to end when max_step is not defined'
         self.stop()
         if self.__end_callback is not None:
             self.__end_callback()
         self.__current_step = self.__max_step
-        self.__callback(self.__current_step)
+        if callback:
+            self.__callback(self.__current_step)
 
     def set(self, step:int):
         '''

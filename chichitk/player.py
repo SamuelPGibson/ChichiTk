@@ -79,7 +79,7 @@ class Player(Frame):
 
         self.__Buttons = PlayerButtons(self, bg, self.__Timer.start, self.__Timer.stop,
                                        self.step_forward, self.step_back,
-                                       self.__Timer.to_end, self.__Timer.reset,
+                                       self.to_end, self.to_start,
                                        padx_weight=buttons_padx_weight)
         self.__Buttons.pack(side=buttons_side, fill='x')
 
@@ -93,15 +93,25 @@ class Player(Frame):
         self.__Timer.stop()
         self.__Buttons.to_play()
 
+    def __callback_status(self):
+        '''returns True if callback should be called (for slider or command events)'''
+        return not self.__limit_running_callbacks or not self.is_running()
+
     def step_forward(self):
         '''same as clicking 'skip forward' button in PlayerButtons'''
-        callback = not self.__limit_running_callbacks or not self.__Timer.is_running()
-        self.__Timer.increment(self.__step_increment, callback=callback)
+        self.__Timer.increment(self.__step_increment, callback=self.__callback_status())
 
     def step_back(self):
         '''same as clicking 'step back' button in PlayerButtons'''
-        callback = not self.__limit_running_callbacks or not self.__Timer.is_running()
-        self.__Timer.increment(-self.__step_increment, callback=callback)
+        self.__Timer.increment(-self.__step_increment, callback=self.__callback_status())
+
+    def to_start(self):
+        '''same as clicking 'previous' button in PlayerButtons'''
+        self.__Timer.reset(callback=self.__callback_status())
+
+    def to_end(self):
+        '''same as clicking 'next' button in PlayerButtons'''
+        self.__Timer.to_end(callback=self.__callback_status())
 
     def set_frame(self, frame:int):
         '''updates the current frame and calls callback function'''
@@ -161,7 +171,7 @@ class Player(Frame):
         '''called when slider is moved by user
         it does not matter whether timer is running or not'''
         self.__Timer.set(step)
-        if not self.__limit_running_callbacks or not self.__Timer.is_running():
+        if self.__callback_status():
             self.__callback(step)
 
     def __end(self):
