@@ -7,7 +7,7 @@ from .labels import NumberEditLabel
 from .canvas_items import CanvasEditLine, CanvasEditFill, brighten
 
 __all__ = ['Slider', 'TimeSlider', 'HorizontalSlider', 'VerticalSlider', 'ScrollBar',
-           'HorizontalSliderGroup', 'VerticalSliderGroup', 'PlotScrollBar', 'DoubleScrollBar']
+           'HorizontalSliderGroup', 'VerticalSliderGroup', 'PlotScrollBar', 'DoubleScrollBar', 'brighten']
 
 # helper functions
 def seconds_text(sec:float):
@@ -484,6 +484,7 @@ class ScrollBar(Canvas):
 
         super().__init__(master, bg=bg, width=width, height=height, highlightthickness=0)
 
+        self.__dragging = False
         self.__callback = callback
         self.__orientation = orientation
         self.__p0, self.__p1 = default0, default1
