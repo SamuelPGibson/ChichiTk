@@ -6,7 +6,7 @@ from .tool_tip import ToolTip
 from .labels import NumberEditLabel
 from .canvas_items import CanvasEditLine, CanvasEditFill, brighten
 
-__all__ = ['Slider', 'TimeSlider', 'HorizontalSlider', 'VerticalSlider',
+__all__ = ['Slider', 'TimeSlider', 'HorizontalSlider', 'VerticalSlider', 'ScrollBar',
            'HorizontalSliderGroup', 'VerticalSliderGroup', 'PlotScrollBar', 'DoubleScrollBar']
 
 # helper functions
@@ -447,6 +447,135 @@ class VerticalSlider(LabelSlider):
         self.Slider.pack(side='bottom', fill='y', expand=True)
         if 'label' in kwargs.keys() and kwargs['label'] != '': # only pack Text if there is a label
             self.Text.pack(side='top')
+
+class ScrollBar(Canvas):
+    ''' ScrollBar for navigating scrollable widgets
+    
+        Only handles values between 0 and 1
+        
+        The current position is defined by two values that correspond to the
+        visible start and end point of the linked scrollable widget
+    '''
+    def __init__(self, master:Frame, callback=None, default0=0, default1=1,
+                 bg:str='#ffffff', slider_color:str='#000000',
+                 slider_hover_color=None, slider_drag_color=None,
+                 width=None, height=None, orientation='h',
+                 disappear_when_filled=True):
+        '''
+        Parameters
+        ----------
+            :param master: Frame - parent widget
+            :param callback: function (float, float) - called when slider is moved
+                                                     - takes two values between 0 and 1
+            :param default0: float (between 0 and 1) - default lower bound
+            :param default1: float (between 0 and 1) - default upper bound
+            :param bg: str (hex code) - slider background color
+            :param slider_color: str (hex code) - slider color when not hovering or dragging
+            :param slider_hover_color: str (hex code) - slider color when hovering (if different from slider color)
+            :param slider_drag_color: str (hex code) - slider color when dragging (if different from hover color)
+            :param width: int (pixels) or None - canvas width (for vertical orientation)
+            :param height: int (pixels) or None - canvas height (for horiontal orientation)
+            :param orientation: Literal['h', 'v'] - horizontal or vertical orientation
+            :param disappear_when_filled: bool - if True hides slider when no scrolling is possible
+        '''
+        assert orientation in ['h', 'v'], f'ScrollBar Error: Invalid orientation: {orientation}'
+        assert default0 >= 0 and default0 < 1, f'ScrollBar Error: Default0 out of range: {default0}'
+        assert default1 > 0 and default1 <= 1, f'ScrollBar Error: Default1 out of range: {default1}'
+
+        super().__init__(master, bg=bg, width=width, height=height, highlightthickness=0)
+
+        self.__callback = callback
+        self.__orientation = orientation
+        self.__p0, self.__p1 = default0, default1
+        self.__disappear_when_filled = disappear_when_filled
+        self.__slider_color = slider_color
+        self.__slider_hover_color = slider_hover_color if slider_hover_color is not None else self.__slider_color
+        self.__slider_drag_color = slider_drag_color if slider_drag_color is not None else self.__slider_hover_color
+
+        self.__slider_id = self.create_rectangle(0, 0, 0, 0, fill=self.__slider_color,
+                                                 width=0, state='normal')
+        
+        # Event Bindings
+        self.tag_bind(self.__slider_id, "<Button-1>", self.__click)
+        self.tag_bind(self.__slider_id, "<ButtonRelease-1>", self.__release)
+        self.tag_bind(self.__slider_id, "<B1-Motion>", self.__motion)
+        self.tag_bind(self.__slider_id, "<Enter>", self.__hover_enter)
+        self.tag_bind(self.__slider_id, "<Leave>", self.__hover_leave)
+        
+        self.bind('<Configure>', self.__set_coords)
+        
+        self.event_generate('<Configure>', when='tail')
+
+    def __set_coords(self, event=None):
+        '''updates coordinates of lines and slider based on canvas size and current value'''
+        # sets slider coordinates based on self.__p0 and self.__p1
+        h, w = self.winfo_height(), self.winfo_width()
+        if self.__orientation == 'h': # horizontal
+            y0, y1 = 0, h
+            x0, x1 = self.__p0 * w, self.__p1 * w
+        elif self.__orientation == 'v': # vertical
+            x0, x1 = 0, w
+            y0, y1 = self.__p0 * h, self.__p1 * h
+        self.coords(self.__slider_id, x0, y0, x1, y1)
+        if self.__disappear_when_filled and x1 == w and y1 == h:
+            self.itemconfig(self.__slider_id, state='hidden')
+        else:
+            self.itemconfig(self.__slider_id, state='normal')
+    
+    def __hover_enter(self, event=None):
+        '''cursor enters canvas'''
+        self.itemconfig(self.__slider_id, fill=self.__slider_hover_color)
+
+    def __hover_leave(self, event=None):
+        '''cursor leaves canvas'''
+        if not self.__dragging:
+            self.itemconfig(self.__slider_id, fill=self.__slider_color)
+
+    def __click(self, event):
+        '''cursor clicks on canvas - move slider to click position'''
+        self.__dragging = True
+        self.itemconfig(self.__slider_id, fill=self.__slider_drag_color)
+        x0, y0, _, _ = self.coords(self.__slider_id)
+        self.__click_x = event.x - x0 # pixels from mouse to left edge of slider
+        self.__click_y = event.y - y0 # pixels from mouse to top edge of slider
+
+    def __release(self, event):
+        '''cursor releases click - change slider color to normal'''
+        self.__dragging = False
+        self.itemconfig(self.__slider_id, fill=self.__slider_hover_color)
+        x0, y0, x1, y1 = self.coords(self.__slider_id)
+        if event.x < x0 or event.x > x1 or event.y < y0 or event.y > y1: # not hovering
+            self.__hover_leave()
+
+    def __motion(self, event):
+        '''cursor drags slider'''
+        x0, y0, x1, y1 = self.coords(self.__slider_id)
+        w, h = self.winfo_width(), self.winfo_height()
+        if self.__orientation == 'h':
+            add = max(-x0, min(w - x1, (event.x - x0) - self.__click_x))
+            x0 += add
+            x1 += add
+            self.__p0, self.__p1 = x0 / w, x1 / w
+        elif self.__orientation == 'v':
+            add = max(-y0, min(h - y1, (event.y - y0) - self.__click_y))
+            y0 += add
+            y1 += add
+            self.__p0, self.__p1 = y0 / h, y1 / h
+        self.coords(self.__slider_id, x0, y0, x1, y1)
+        if self.__callback is not None:
+            self.__callback(self.__p0, self.__p1)
+
+    def set(self, p0:float, p1:float):
+        '''sets slider value - must be between 0 and 1 (does not call callback function)'''
+        assert p0 >= 0 and p0 < 1, f'ScrollBar Error: set lower bound to invalid value: {p0}'
+        assert p1 > 0 and p1 <= 1, f'ScrollBar Error: set upper bound to invalid value: {p1}'
+        assert p1 > p0 ,f'ScrollBar Error: lower bound is greater than upper bound! lower: {p0}, upper: {p1}'
+        self.__p0, self.__p1 = p0, p1
+        self.__set_coords()
+
+    def get(self):
+        '''returns current slider value'''
+        return self.__p0, self.__p1
 
 
 class HorizontalSliderGroup(Frame):
