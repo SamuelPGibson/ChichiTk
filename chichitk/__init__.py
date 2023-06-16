@@ -14,6 +14,7 @@ from .player import *
 from .progress_bar import *
 from .scrollable_frame import *
 from .sliders import *
+from .temp_label import *
 from .temp_menu import *
 from .text_boxes import *
 from .timer import *
