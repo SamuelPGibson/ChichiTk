@@ -507,7 +507,7 @@ class ScrollBar(Canvas):
         
         self.event_generate('<Configure>', when='tail')
 
-    def __set_coords(self, event=None):
+    def __set_coords(self, event=None, filled_thresh=0.001):
         '''updates coordinates of lines and slider based on canvas size and current value'''
         # sets slider coordinates based on self.__p0 and self.__p1
         h, w = self.winfo_height(), self.winfo_width()
@@ -518,7 +518,7 @@ class ScrollBar(Canvas):
             x0, x1 = 0, w
             y0, y1 = self.__p0 * h, self.__p1 * h
         self.coords(self.__slider_id, x0, y0, x1, y1)
-        if self.__disappear_when_filled and x1 == w and y1 == h:
+        if self.__disappear_when_filled and self.__p0 < filled_thresh and self.__p1 > 1 - filled_thresh:
             self.itemconfig(self.__slider_id, state='hidden')
         else:
             self.itemconfig(self.__slider_id, state='normal')
