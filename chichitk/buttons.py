@@ -455,6 +455,61 @@ class ToggleLabelButton(LabelButton):
         if self.toggle_command is not None:
             self.toggle_command(self.selected)
 
+class ToggleIconButtonGroup(Frame):
+    ''' Group of ToggleIconButtons where only one can be active at a time
+    
+        Clicking a button will automatically deselect all other buttons in the
+        group and call their respective off callback functions
+    '''
+    def __init__(self, master:Frame, button_info:list, orientation:str='h',
+                 bg='#ffffff', buttons_padx=0, buttons_pady=0, **kwargs):
+        '''
+        Parameters
+        ----------
+            :master: Frame - parent frame
+            :param button_info: list[dict] - contains keys for each button:
+                icon_path: str - path to .png file
+                on_callback: function() - called when button is clicked
+                off_callback: function() - called when button is deselected
+                label (optional): str - button label
+                popup_label (optional): str - button popup label
+        '''
+        assert orientation in ['h', 'v'], f'ToggleIconButtonGroup Error: Invalid orientation: {orientation}'
+        super().__init__(master, bg=bg)
+        self.__button_info = button_info
+
+        pack_side = 'left' if orientation == 'h' else 'top'
+
+        self.__buttons: list[ToggleIconButton] = []
+        for i, info in enumerate(self.__button_info):
+            label = info['label'] if 'label' in info.keys() else ''
+            popup_label = info['popup_label'] if 'popup_label' in info.keys() else ''
+            button = ToggleIconButton(self, info['icon_path'],
+                                      command=lambda b, x=i: self.__callback(b, x),
+                                      label=label, popup_label=popup_label, **kwargs)
+            button.pack(side=pack_side, padx=buttons_padx, pady=buttons_pady, fill='both')
+            self.__buttons.append(button)
+
+    def __callback(self, active:bool, button_index:int):
+        '''called when the ith button is clicked'''
+        if active: # callback and deactivate all other buttons
+            for i, button in enumerate(self.__buttons):
+                if i == button_index: # callback for clicked button
+                    self.__button_info[i]['on_callback']()
+                else: # deactivate other buttons
+                    button.deselect()
+                    self.__button_info[i]['off_callback']()
+        else: # off callback for clicked button
+            self.__button_info[button_index]['off_callback']()
+
+    def set_color(self, button_index:int, color:str, **kwargs):
+        '''sets color for the button with the specified index'''
+        self.__buttons[button_index].set_color(color, **kwargs)
+
+    def get(self) -> list:
+        '''returns list of booleans indicating selection status of each button'''
+        return [button.get() for button in self.__buttons]
+
 class PlayerButtons(Frame):
     ''' Collection of IconButtons for controlling the playback of music, a
         video, or something like that.
