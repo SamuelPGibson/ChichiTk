@@ -195,6 +195,7 @@ class IconButton(BaseButton):
         self.icon_frame.pack(side='top', padx=self.padx, pady=self.pady)
         self.icon = Button(self.icon_frame, borderwidth=0, command=self.click_button)
         self.icon.pack(side='left')
+        self.label_text = label
         self.label = Label(self.icon_frame, text=label, font=(self.font_name, self.font_size), bd=0)
         self.label.pack(side='right', fill='y')
 
@@ -203,9 +204,9 @@ class IconButton(BaseButton):
         
         # Load icon
         if isinstance(icon_path, str): # path to image
-            assert len(icon_path) > 4, f'Invalid path: {icon_path}'
-            assert icon_path[-4:] == '.png', f'icon_path is not a .png file: {icon_path}'
-            assert os.path.exists(icon_path), f'Path to .png file does not exist: {icon_path}'
+            assert len(icon_path) > 4, f'IconButton Error: Invalid path: {icon_path}'
+            assert icon_path[-4:] == '.png', f'IconButton Error: icon_path is not a .png file: {icon_path}'
+            assert os.path.exists(icon_path), f'IconButton Error: Path to .png file does not exist: {icon_path}'
             self.base_img = cv2.imread(icon_path)
         elif isinstance(icon_path, np.ndarray): # 3d numpy array
             self.base_img = icon_path
@@ -253,6 +254,10 @@ class IconButton(BaseButton):
         elif which == 'bar':
             self.bar_colors[selected][hover] = color
         self.config_colors()
+
+    def get_label(self) -> str:
+        '''returns button label'''
+        return self.label_text
 
 class ToggleIconButton(IconButton):
     ''' Toggle version of IconButton. The callback command is given a boolean
@@ -378,6 +383,13 @@ class DoubleIconButton(Frame):
     def get(self):
         '''returns False if button1 is active and True if button2 is active'''
         return self.__double_status
+    
+    def get_label(self) -> str:
+        '''returns current button label'''
+        if self.__double_status: # button2 is active
+            return self.Button2.get_label()
+        else:
+            return self.Button1.get_label()
 
 class CheckButton(DoubleIconButton):
     ''' Special version of DoubleIconButton that has a checkbox icon - checked and unchecked
@@ -529,7 +541,7 @@ class PlayerButtons(Frame):
             skip_forward - go forward by a given increment
             next - go to next song or end of current song
             loop (toggle) - turn looping on or off
-            '''
+    '''
     def __init__(self, master, bg, play_function, stop_function, step_forward_function,
                  step_back_function, next_function, previous_function,
                  active_icon_color='#ffffff', hover_fg='#aaaaaa',
