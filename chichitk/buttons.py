@@ -419,11 +419,11 @@ class CheckButton(DoubleIconButton):
 
     def select(self):
         '''select check button without calling callback command'''
-        self.switch1()
+        self.switch2()
 
     def deselect(self):
         '''deselect check button without calling callback command'''
-        self.switch2()
+        self.switch1()
 
 class LabelButton(BaseButton):
     ''' LabelButton includes bar underneath the label. The parameter
