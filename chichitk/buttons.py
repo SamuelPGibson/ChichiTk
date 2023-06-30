@@ -289,8 +289,9 @@ class DoubleIconButton(Frame):
     ''' DoubleIconButton contains two IconButtons that swap when clicked.
         There are separate commands for the two IconButtons
     '''
-    def __init__(self, master, icon1:str, icon2:str, command1, command2, label1:str='', label2:str='',
-                 popup_label1=None, popup_label2=None, **kwargs):
+    def __init__(self, master, icon1:str, icon2:str, command1, command2,
+                 label1:str='', label2:str='', popup_label1=None, popup_label2=None,
+                 inactive_fg:str='#888888', active_fg:str='#ffffff', **kwargs):
         '''IconButton that changes when clicked
         
         Parameters
@@ -306,9 +307,9 @@ class DoubleIconButton(Frame):
         self.__double_status = False # False when button 1 is active and True when button 2 is active
 
         self.Button1 = IconButton(self, icon1, self.click1, label=label1, selectable=False,
-                                    popup_label=popup_label1, **kwargs)
+                                    popup_label=popup_label1, inactive_fg=inactive_fg, **kwargs)
         self.Button2 = IconButton(self, icon2, self.click2, label=label2, selectable=False,
-                                    popup_label=popup_label2, **kwargs)
+                                    popup_label=popup_label2, inactive_fg=active_fg, **kwargs)
         self.Button1.pack(fill='both', expand=True)
 
     def switch1(self):
