@@ -231,6 +231,7 @@ class IconButton(BaseButton):
         else:
             bg, fg, bar_color, image = self.bg_colors[0][0], self.off_fg, self.bg_colors[0][0], self.off_icon
         self.config(bg=bg)
+        self.icon_frame.config(bg=bg)
         self.bar.config(bg=bar_color)
         self.label.config(bg=bg, fg=fg)
         self.icon.config(image=image, bg=bg, activebackground=bg)
