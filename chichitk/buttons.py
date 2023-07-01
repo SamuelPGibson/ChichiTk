@@ -528,6 +528,10 @@ class ToggleIconButtonGroup(Frame):
         '''sets color for the button with the specified index'''
         self.__buttons[button_index].set_color(color, **kwargs)
 
+    def click(self, button_index:int):
+        '''clicks the specified button'''
+        self.__buttons[button_index].click_button()
+
     def get(self) -> list:
         '''returns list of booleans indicating selection status of each button'''
         return [button.get() for button in self.__buttons]
