@@ -1,4 +1,5 @@
 from tkinter import Frame, Label
+from datetime import datetime
 
 from .timer import Timer
 
@@ -15,6 +16,7 @@ class TempLabel(Label):
             :param default_text: str - text displayed when clearing
         '''
         self.__default_text = default_text
+        self.__text_history: list[dict] = []
         super().__init__(master, text=self.__default_text, **kwargs)
 
         self.__delay = 0.1 # arbitrary time between steps
@@ -37,7 +39,22 @@ class TempLabel(Label):
             Updates label text and any other parameters such as foregroud color
             Resets the timer
         '''
+        self.__text_history.append({'text':text, 'time':datetime.now()})
         self.config(text=text, **kwargs)
         self.__Timer.reset()
         self.__Timer.start() # in case label was on default (Timer not running)
+
+    def get_history(self) -> list:
+        '''
+        Purpose
+        -------
+            collects all text updates, with their corresponding timestamps
+        
+        Returns
+        -------
+            :return: list[dict] - each dict contains keys:
+                text: str - text that was passed to set_text()
+                time: datetime object - timestamp when set_text() was called
+        '''
+        return self.__text_history
 
