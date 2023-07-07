@@ -136,10 +136,11 @@ class EditLabel(Frame):
             self.label.focus_set() # to take focus away from Entry so that keyboard strokes are no longer read by Entry
             self.label.pack(fill='both')
             if self.check_function is None or self.check_function(self.Entry.get()): # only if text in Entry is good
-                self.text = self.Entry.get()
-                self.label.config(text=self.text)
-                if callback and self.callback:
-                    self.callback(self.text)
+                if self.Entry.get() != self.text: # only callback if text has changed
+                    self.text = self.Entry.get()
+                    self.label.config(text=self.text)
+                    if callback and self.callback:
+                        self.callback(self.text)
             if self.entry_off_function:
                 self.entry_off_function()
 
