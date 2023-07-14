@@ -62,6 +62,13 @@ class ProgressBar(Frame):
                                                    fill=active_color, width=0,
                                                    state='normal')
 
+    def set(self, perc:float):
+        '''sets progress bar given a completion percentage'''
+        assert perc >= 0 and perc <= 1, f'Progress Bar Error: Invalid completion percentage: {perc}'
+        self.current_value = int(self.iterations * perc)
+        self.canvas.coords(self.bar_id, *self.get_bar_coords())
+        self.label.config(text=self.get_percentage_text())
+
     def set_text(self, text:str):
         '''updates progress bar loading text'''
         self.loading_label.config(text=text)
