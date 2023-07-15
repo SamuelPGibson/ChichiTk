@@ -55,6 +55,7 @@ class TextBox(Frame):
                  error_highlight_fg:str='#000000', track_fg:str='#bbbbbb',
                  font_name:str='Consolas', font_size:int=15,  wrap='none',
                  focus_in_function=None, focus_out_function=None,
+                 scroll_callback=None, line_num_callback=None,
                  check_blank_lines:bool=True, check_consecutive_spaces:bool=True,
                  line_numbers_labels=True, width=None, height=None,
                  justify='left', inactive_justify='center'):
@@ -78,11 +79,16 @@ class TextBox(Frame):
             :param wrap: str Literal['none', 'char', 'word'] - wrap setting
             :param focus_in_function: function () - called when text box takes focus
             :param focus_out_function: function () - called when text box loses focus
+            :param scroll_callback: function(yview_moveto) - called when text box is scrolled
+            :param line_num_callback: function(line_num) - called when number of lines is changed
             :param check_blank_lines: bool - if True, show error when there are blank lines
             :param check_consecutive_spaces: bool - if True, show error when there are consecutive spaces
             :param line_numbers_labels: bool - if True, show line numbers
         '''
         self.callback_function = callback
+        self.scroll_callback = scroll_callback
+        self.line_num_callback = line_num_callback
+        self.line_num = 0
         self.bg, self.fg = bg, fg
         self.error_bg = error_bg
         self.error_highlight_bg = error_highlight_bg
@@ -104,25 +110,37 @@ class TextBox(Frame):
         self.track.config(state='disabled')
         # undo must be False because Ctrl+z causes infinite loop (no idea why)
         self.box = Text(self, width=width, height=height, font=(font_name, font_size),
-                        bg=bg, fg=fg, insertbackground=cursor_color, undo=False, wrap=wrap,
-                        yscrollcommand=lambda a, b: self.track.yview_moveto(a), bd=0)
+                        bg=bg, fg=fg, insertbackground=cursor_color, undo=False,
+                        wrap=wrap, yscrollcommand=self.__box_scroll, bd=0)
         self.box.pack(side='right', fill='both', expand=True)
         self.box.tag_add("justify", 1.0, "end")
         self.box.tag_configure('justify', justify=self.justify)
         self.box.bind("<<TextModified>>", self.callback)
         # must not set yscrollcommand until after self.box is defined
         # to avoid AttributeError
-        self.track.config(yscrollcommand=lambda a, b: self.box.yview_moveto(a))
+        self.track.config(yscrollcommand=self.__track_scroll)
         #self.box.bind("<Key>", self.callback)
-        if focus_in_function:
+        if focus_in_function is not None:
             self.box.bind("<FocusIn>", focus_in_function)
-        if focus_out_function:
+        if focus_out_function is not None:
             self.box.bind("<FocusOut>", focus_out_function)
 
         # create a proxy for the underlying widget
         self.box._orig = self.box._w + "_orig"
         self.box.tk.call("rename", self.box._w, self.box._orig)
         self.box.tk.createcommand(self.box._w, self._proxy)
+
+    def __box_scroll(self, a, b):
+        '''called when text box is scrolled with mousewheel'''
+        self.track.yview_moveto(a)
+        if self.scroll_callback is not None:
+            self.scroll_callback(a)
+
+    def __track_scroll(self, a, b):
+        '''called when track box is scrolled with mousewheel'''
+        self.box.yview_moveto(a)
+        if self.scroll_callback is not None:
+            self.scroll_callback(a)
 
     def _proxy(self, command, *args):
         '''facilitates callback - called whenever Text box is edited by user'''
@@ -153,6 +171,10 @@ class TextBox(Frame):
         self.track.tag_delete('right')
         self.track.tag_add("right", 1.0, "end")
         self.track.tag_configure("right", justify='right')
+        if text.count('\n') + 1 != self.line_num: # number of lines has changed
+            self.line_num = text.count('\n') + 1
+            if self.line_num_callback is not None:
+                self.line_num_callback(self.line_num)
 
         # do basic error checking
         self.good_format = True
@@ -202,11 +224,11 @@ class TextBox(Frame):
         '''clears all text from text box'''
         self.box.delete(0.0, 'end')
 
-    def insert(self, text):
+    def insert(self, text:str):
         '''inserts text at the end of text box'''
         self.box.insert('end', text)
 
-    def clear_insert(self, text):
+    def clear_insert(self, text:str):
         '''clears all text from text box and adds text'''
         self.clear()
         self.insert(text)
