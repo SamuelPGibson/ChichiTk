@@ -52,8 +52,9 @@ class TextBox(Frame):
     def __init__(self, master, callback=None, bg:str='#ffffff', fg:str='#000000',
                  cursor_color=None, disabled_bg=None, disabled_fg=None,
                  error_bg:str='#3c2525', error_highlight_bg:str='#ff0000',
-                 error_highlight_fg:str='#000000', track_fg:str='#bbbbbb',
-                 font_name:str='Consolas', font_size:int=15,  wrap='none',
+                 error_highlight_fg:str='#000000', track_fg:str='#a6a6a6',
+                 track_active_fg:str='#ffffff', active_line_indices:list=None,
+                 font_name:str='Consolas', font_size:int=15, wrap='none',
                  focus_in_function=None, focus_out_function=None,
                  scroll_callback=None, line_num_callback=None,
                  check_blank_lines:bool=True, check_consecutive_spaces:bool=True,
@@ -74,6 +75,8 @@ class TextBox(Frame):
             :param error_highlight_bg: str (hex code) - highlight on text causing error
             :param error_highlight_fg: str (hex code) - color of text cauing error
             :param track_fg: str (hex code) - color of track text - line numbers
+            :param track_active_fg: str (hex code) - color of active lines in track box
+            :param active_line_indices: list[int] - indices of active lines
             :param font_name: str - font for text box and line numbers
             :param font_size: int - font size for text box and line numbers
             :param wrap: str Literal['none', 'char', 'word'] - wrap setting
@@ -89,7 +92,9 @@ class TextBox(Frame):
         self.scroll_callback = scroll_callback
         self.line_num_callback = line_num_callback
         self.line_num = 0
+        self.active_line_indices = active_line_indices if active_line_indices is not None else []
         self.bg, self.fg = bg, fg
+        self.track_active_fg = track_active_fg
         self.error_bg = error_bg
         self.error_highlight_bg = error_highlight_bg
         self.error_highlight_fg = error_highlight_fg
@@ -171,6 +176,7 @@ class TextBox(Frame):
         self.track.tag_delete('right')
         self.track.tag_add("right", 1.0, "end")
         self.track.tag_configure("right", justify='right')
+        self.set_active_lines(self.active_line_indices) # reset after updating track box
         if text.count('\n') + 1 != self.line_num: # number of lines has changed
             self.line_num = text.count('\n') + 1
             if self.line_num_callback is not None:
@@ -208,6 +214,16 @@ class TextBox(Frame):
         self.track.yview_moveto(y_pos)
         if self.callback_function:
             self.callback_function(text)
+
+    def set_active_lines(self, line_indices:list):
+        '''changes the foreground in track box for the given line indices
+        :param line_indices: list of ints - indices of lines to highlight
+        '''
+        self.active_line_indices = line_indices
+        self.track.tag_delete('active_track_line')
+        for i in line_indices:
+            self.track.tag_add('active_track_line', f'{i + 1}.0', f'{i + 2}.0')
+        self.track.tag_config('active_track_line', foreground=self.track_active_fg)
 
     def get(self, strip=True) -> str:
         '''returns entire text in text box
