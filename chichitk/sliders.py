@@ -479,8 +479,8 @@ class ScrollBar(Canvas):
             :param disappear_when_filled: bool - if True hides slider when no scrolling is possible
         '''
         assert orientation in ['h', 'v'], f'ScrollBar Error: Invalid orientation: {orientation}'
-        assert default0 >= 0 and default0 < 1, f'ScrollBar Error: Default0 out of range: {default0}'
-        assert default1 > 0 and default1 <= 1, f'ScrollBar Error: Default1 out of range: {default1}'
+        assert default0 >= 0 and default0 <= 1, f'ScrollBar Error: Default0 out of range: {default0}'
+        assert default1 >= 0 and default1 <= 1, f'ScrollBar Error: Default1 out of range: {default1}'
 
         super().__init__(master, bg=bg, width=width, height=height, highlightthickness=0)
 
@@ -568,9 +568,9 @@ class ScrollBar(Canvas):
 
     def set(self, p0:float, p1:float):
         '''sets slider value - must be between 0 and 1 (does not call callback function)'''
-        assert p0 >= 0 and p0 < 1, f'ScrollBar Error: set lower bound to invalid value: {p0}'
-        assert p1 > 0 and p1 <= 1, f'ScrollBar Error: set upper bound to invalid value: {p1}'
-        assert p1 > p0 ,f'ScrollBar Error: lower bound is greater than upper bound! lower: {p0}, upper: {p1}'
+        assert p0 >= 0 and p0 <= 1, f'ScrollBar Error: set lower bound to invalid value: {p0}'
+        assert p1 >= 0 and p1 <= 1, f'ScrollBar Error: set upper bound to invalid value: {p1}'
+        assert p1 >= p0 ,f'ScrollBar Error: lower bound is greater than upper bound! lower: {p0}, upper: {p1}'
         self.__p0, self.__p1 = p0, p1
         self.__set_coords()
 
