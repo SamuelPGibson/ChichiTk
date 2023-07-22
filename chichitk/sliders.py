@@ -736,6 +736,7 @@ class PlotScrollBar(Canvas):
         self.current_frame, self.min_frame, self.max_frame = start_frame, min_frame, frames
         self.min_seconds, self.max_seconds = self.min_frame / frame_rate, self.max_frame / frame_rate
         self.width = None
+        self.xmin, self.xmax = 0, 1 # only needed before Canvas has been rendered - '<Configure>'
         if self.label:
             self.label_line_height, self.tick_height = height * 0.5, height * 0.59
         else:
