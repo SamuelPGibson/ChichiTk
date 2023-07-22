@@ -113,11 +113,12 @@ class Player(Frame):
         '''same as clicking 'next' button in PlayerButtons'''
         self.__Timer.to_end(callback=self.__callback_status())
 
-    def set_frame(self, frame:int):
-        '''updates the current frame and calls callback function'''
+    def set_frame(self, frame:int, callback=True):
+        '''updates the current frame and calls callback function (if callback==True)'''
         self.__Timer.set(frame)
         self.__Slider.set_frame(frame)
-        self.__callback(frame)
+        if callback:
+            self.__callback(frame)
 
     def set_frame_num(self, frame_num:int):
         '''updates number of steps - pushes to timer and scrollbar'''
