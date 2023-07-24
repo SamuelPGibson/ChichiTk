@@ -44,6 +44,10 @@ class TempLabel(Label):
         self.__Timer.reset()
         self.__Timer.start() # in case label was on default (Timer not running)
 
+    def clear_history(self):
+        '''clears text history'''
+        self.__text_history = []
+
     def get_history(self) -> list:
         '''
         Purpose
