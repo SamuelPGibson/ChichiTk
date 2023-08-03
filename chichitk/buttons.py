@@ -427,6 +427,13 @@ class CheckButton(DoubleIconButton):
         '''deselect check button without calling callback command'''
         self.switch1()
 
+    def set(self, status:bool):
+        '''sets selection status of CheckButton'''
+        if status:
+            self.select()
+        else:
+            self.deselect()
+
 class LabelButton(BaseButton):
     ''' LabelButton includes bar underneath the label. The parameter
         'bar_height' can be set to 0 to remove the bar.
