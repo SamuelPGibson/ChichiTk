@@ -56,3 +56,12 @@ class AspectFrame(Frame):
             self.__config_callback(event)
         if self.__size_callback:
             self.__size_callback(desired_width, desired_height)
+
+    def set_aspect_ratio(self, aspect_ratio:float):
+        ''':param aspect_ratio: float - ratio of width / height'''
+        self.__aspect_ratio = aspect_ratio
+        self.event_generate('<Configure>', when='now')
+
+    def get_aspect_ratio(self) -> float:
+        '''returns aspect ratio: ratio of width / height'''
+        return self.__aspect_ratio
