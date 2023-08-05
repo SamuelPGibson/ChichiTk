@@ -163,6 +163,13 @@ class BaseButton(Frame):
             if self.select_on_click:
                 self.select()
 
+    def set(self, status:bool):
+        '''sets selection status, so long as button is selectable'''
+        if status:
+            self.select()
+        else:
+            self.deselect()
+
     def select(self):
         if self.selectable and not self.selected:
             self.selected = True
@@ -172,6 +179,10 @@ class BaseButton(Frame):
         if self.selected:
             self.selected = False
             self.config_colors()
+
+    def get(self):
+        '''returns True if button is selected, otherwise False'''
+        return self.selected
 
 class IconButton(BaseButton):
     ''' Extension of BaseButton with an icon besode the label. The label can
@@ -281,10 +292,6 @@ class ToggleIconButton(IconButton):
         if self.toggle_command is not None:
             self.toggle_command(self.selected)
 
-    def get(self) -> bool:
-        '''returns selection status'''
-        return self.selected
-
 class DoubleIconButton(Frame):
     ''' DoubleIconButton contains two IconButtons that swap when clicked.
         There are separate commands for the two IconButtons
@@ -381,6 +388,13 @@ class DoubleIconButton(Frame):
         '''makes button uninteractable'''
         self.Button1.turn_off()
         self.Button2.turn_off()
+
+    def set(self, status:bool):
+        '''sets to button1 if status is False and button2 if status is True'''
+        if status:
+            self.switch2()
+        else:
+            self.switch1()
 
     def get(self):
         '''returns False if button1 is active and True if button2 is active'''
