@@ -419,10 +419,10 @@ class TimeEditLabel(NumberEditLabel):
 class RangeLabel(Frame):
     ''' Pair of NumberEditLabels that allow user to select a range
     '''
-    def __init__(self, master, callback=None, bg='#ffffff', sep_text='to',
-                 min_val=0, max_val=100, default_min=None, default_max=None,
-                 step=1, min_range=0, label_fg='#888888', label_font_size=10,
-                 **kwargs):
+    def __init__(self, master, callback=None, bg='#ffffff', dropdown_bg=None,
+                 sep_text='to', min_val=0, max_val=100, default_min=None,
+                 default_max=None, step=1, min_range=0, label_fg='#888888',
+                 label_font_size=10, **kwargs):
         '''
         Parameters
         ----------
@@ -446,12 +446,13 @@ class RangeLabel(Frame):
         default_max = default_max if default_max is not None else max_val
         max_len = len(str(max_val)) if step % 1 == 0 else None
 
-        self._MinLabel = NumberEditLabel(self, self._min_callback, bg=bg,
+        dropdown_bg = dropdown_bg if dropdown_bg is not None else bg
+        self._MinLabel = NumberEditLabel(self, self._min_callback, bg=dropdown_bg,
                                           min_value=min_val,
                                           max_value=default_max - self._min_range,
                                           step=step, default_value=default_min,
                                           max_len=max_len, **kwargs)
-        self._MaxLabel = NumberEditLabel(self, self._max_callback, bg=bg,
+        self._MaxLabel = NumberEditLabel(self, self._max_callback, bg=dropdown_bg,
                                           min_value=default_min + self._min_range,
                                           max_value=max_val, step=step,
                                           default_value=default_max,
