@@ -282,13 +282,13 @@ class NumberEditLabel(EditLabel):
 
     def set_min_value(self, min_value:int):
         '''sets minimum value - must be less than current maximum value'''
-        assert min_value <= self._max_value, f'Tried to set minimum value, {min_value}, that is greater than current maximum value, {self._max_value}'
+        self._max_value = max(self._max_value, min_value) # adjust max if necessary
         self._min_value = min_value
         self._values = np.arange(self._min_value, self._max_value + self._step * 0.9, self._step)
 
     def set_max_value(self, max_value:int):
         '''sets maximum value - must be greater than current minimum value'''
-        assert max_value >= self._min_value, f'Tried to set maximum value, {max_value}, that is greater than current minimum value, {self._min_value}'
+        self._min_value = min(self._min_value, max_value) # adjust min if necessary
         self._max_value = max_value
         self._values = np.arange(self._min_value, self._max_value + self._step * 0.9, self._step)
 
