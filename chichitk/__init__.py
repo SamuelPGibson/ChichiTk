@@ -8,6 +8,7 @@ from .dropdowns import *
 from .entry_boxes import *
 from .file_dialog import *
 from .function_progress import *
+from .icon_labels import *
 from .labels import *
 from .pdf_display import PdfDisplay
 from .player import *
