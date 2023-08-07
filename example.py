@@ -130,9 +130,18 @@ class LeftFrame(Frame):
         for i in range(4):
             frame.grid_rowconfigure(i, weight=1)
 
-        for i, label in enumerate(['Dropdown', 'Check Entry', 'Color Entry', 'Upload File', 'Time Label', 'Range Labels', 'Slider']):
+        for i, label in enumerate(['Check Label', 'Dropdown', 'Check Entry',
+                                   'Color Entry', 'Upload File', 'Time Label',
+                                   'Range Labels', 'Slider']):
             Label(frame, text=label, bg=colors[1], fg='#ffffff',
                   font=('Segoe UI', 11)).grid(row=i, column=0)
+        check_frame = Frame(frame, bg=colors[0])
+        button = chichitk.LabelButton(check_frame, lambda: check_icon.set(not check_icon.get()),
+                                      label='Toggle', inactive_bg=colors[0],
+                                      inactive_fg='#ffffff', selectable=False)
+        button.pack(side='left', fill='both', expand=True)
+        check_icon = chichitk.CheckIcon(check_frame, inactive_bg=colors[0])
+        check_icon.pack(side='right', padx=15)
         dropdown = chichitk.BasicDropDown(frame, ['Option 1', 'Option 2', 'Option 3'],
                                           'Select', bg=colors[0], fg='#ffffff')
         entry = chichitk.CheckEntry(frame, bg=colors[0], fg='#ffffff')
@@ -152,7 +161,8 @@ class LeftFrame(Frame):
                                            hide_slider=True, slider_type='circle',
                                            label_draggable=True, label_fg='#ffffff',
                                            text_fg='#ffffff', label='', step=0.1)
-        for i, widget in enumerate([dropdown, entry, color_entry, upload, time, number, slider]):
+        for i, widget in enumerate([check_frame, dropdown, entry, color_entry,
+                                    upload, time, number, slider]):
             widget.grid(row=i, column=1, pady=2, sticky='nsew')
 
         # Textbox - Top
