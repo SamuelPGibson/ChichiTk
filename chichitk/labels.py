@@ -280,15 +280,23 @@ class NumberEditLabel(EditLabel):
         if self._callback_function is not None:
             self._callback_function(self.get())
 
-    def set_min_value(self, min_value:int):
-        '''sets minimum value - must be less than current maximum value'''
-        self._max_value = max(self._max_value, min_value) # adjust max if necessary
+    def set_min_value(self, min_value:int, force_limits=True):
+        '''sets minimum value - must be less than current maximum value
+        if force_limits is True, changes value and max value if necessary'''
+        if force_limits:
+            self._max_value = max(self._max_value, min_value) # adjust max if necessary
+            if min_value > self.get():
+                self.set(min_value, force_limits=False)
         self._min_value = min_value
         self._values = np.arange(self._min_value, self._max_value + self._step * 0.9, self._step)
 
-    def set_max_value(self, max_value:int):
-        '''sets maximum value - must be greater than current minimum value'''
-        self._min_value = min(self._min_value, max_value) # adjust min if necessary
+    def set_max_value(self, max_value:int, force_limits=True):
+        '''sets maximum value - must be greater than current minimum value
+        if force_limits is True, changes value and min value if necessary'''
+        if force_limits:
+            self._min_value = min(self._min_value, max_value) # adjust min if necessary
+            if max_value < self.get():
+                self.set(max_value, force_limits=False)
         self._max_value = max_value
         self._values = np.arange(self._min_value, self._max_value + self._step * 0.9, self._step)
 
@@ -312,8 +320,13 @@ class NumberEditLabel(EditLabel):
             dec = 0
         return text + '0' * (self._decimals - dec)
 
-    def set(self, value:int):
-        '''updates value'''
+    def set(self, value:int, force_limits=True):
+        '''updates value
+        if force_limits is True, changes min and max value if necessary
+        '''
+        if force_limits:
+            self._min_value = min(self._min_value, value)
+            self._max_value = max(self._max_value, value)
         super().set_text(self._get_text(value))
 
     def get(self) -> int:
