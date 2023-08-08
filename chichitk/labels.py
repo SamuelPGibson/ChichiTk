@@ -421,8 +421,8 @@ class TimeEditLabel(NumberEditLabel):
         else: # float
             return round(value, self._decimals)
         
-    def set(self, seconds:float):
-        '''updates value'''
+    def set(self, seconds:float, force_limits=False):
+        '''updates value - force_limits is only for consistency with NumberEditLabel'''
         self.set_text(self._get_text(seconds))
 
     def get(self) -> float:
