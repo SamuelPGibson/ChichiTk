@@ -18,7 +18,7 @@ class EditLabel(Frame):
     def __init__(self, master:Frame, text:str, bg:str='#ffffff', fg:str='#000000',
                  hover_bg:str='#cccccc', error_color='#ff0000', callback=None,
                  allowed_chars=None, max_len=None, check_function=None,
-                 editable=True, justify='left', focus_out_bind=True,
+                 editable=True, justify='left', focus_out_bind=True, hover_bind=True,
                  hover_enter_function=None, hover_leave_function=None,
                  entry_on_function=None, entry_off_function=None,
                  font_name='Segoe UI', font_size=10, width=0):
@@ -66,12 +66,13 @@ class EditLabel(Frame):
                                 font_name=font_name, font_size=font_size,
                                 justify=justify, bg=bg, fg=fg,
                                 error_color=error_color, width=width)
-        self.label.bind("<Enter>", self.hover_enter)
-        self.label.bind("<Leave>", self.hover_leave)
         self.label.bind('<Double-Button-1>', self.to_entry)
         self.label.bind("<ButtonRelease-1>", self.button_release)
         self.Entry.bind("<Return>", self.to_label)
         self.Entry.bind("<Tab>", self.to_label)
+        if hover_bind:
+            self.label.bind("<Enter>", self.hover_enter)
+            self.label.bind("<Leave>", self.hover_leave)
         if focus_out_bind:
             self.Entry.bind("<FocusOut>", self.to_label)
 
