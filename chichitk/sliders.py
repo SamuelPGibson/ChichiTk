@@ -626,6 +626,11 @@ class HorizontalSliderGroup(Frame):
                                  slider_pady=slider_pady, **kwargs)
             self.sliders.append(S)
 
+    def set(self, d:dict):
+        '''sets values of sliders - input dictionary MUST contain key and value for each slider'''
+        for label, slider in zip(self.labels, self.sliders):
+            slider.set(d[label])
+
     def get(self) -> dict:
         '''returns dictionary with current value of each slider'''
         return [{label:slider.get()} for label, slider in zip(self.labels, self.sliders)]
@@ -680,6 +685,11 @@ class VerticalSliderGroup(Frame):
             S.grid(row=i // columns, column=i % columns, sticky='nsew',
                    padx=slider_padx, pady=slider_pady)
             self.sliders.append(S)
+
+    def set(self, d:dict):
+        '''sets values of sliders - input dictionary MUST contain key and value for each slider'''
+        for label, slider in zip(self.labels, self.sliders):
+            slider.set(d[label])
 
     def get(self) -> dict:
         '''returns dictionary with current value of each slider'''
