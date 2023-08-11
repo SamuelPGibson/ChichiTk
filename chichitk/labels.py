@@ -62,7 +62,7 @@ class EditLabel(Frame):
         self.label = Label(self, text=self.text, bg=bg, fg=fg, font=(font_name, font_size))
         self.label.pack(fill='both')
         self.Entry = CheckEntry(self, default=self.text, allowed_chars=allowed_chars,
-                                max_len=max_len, check_function=check_function,
+                                max_len=max_len, check_function=self._entry_check_callback,
                                 font_name=font_name, font_size=font_size,
                                 justify=justify, bg=bg, fg=fg,
                                 error_color=error_color, width=width)
@@ -120,6 +120,11 @@ class EditLabel(Frame):
             self.hover_leave()
             self.dragging = False
 
+    def _entry_check_callback(self, text:str):
+        '''called when text in entry box is modified'''
+        check = self.check_function is None or self.check_function(text)
+        return text == self.text or check
+
     def to_entry(self, event=None):
         if self.editable:
             self.label.pack_forget()
@@ -136,7 +141,7 @@ class EditLabel(Frame):
             self.Entry.pack_forget()
             self.label.focus_set() # to take focus away from Entry so that keyboard strokes are no longer read by Entry
             self.label.pack(fill='both')
-            if self.check_function is None or self.check_function(self.Entry.get()): # only if text in Entry is good
+            if self._entry_check_callback(self.Entry.get()): # only if text in Entry is good
                 if self.Entry.get() != self.text: # only callback if text has changed
                     self.text = self.Entry.get()
                     self.label.config(text=self.text)
