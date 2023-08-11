@@ -633,7 +633,7 @@ class HorizontalSliderGroup(Frame):
 
     def get(self) -> dict:
         '''returns dictionary with current value of each slider'''
-        return [{label:slider.get()} for label, slider in zip(self.labels, self.sliders)]
+        return {label:slider.get() for label, slider in zip(self.labels, self.sliders)}
 
 class VerticalSliderGroup(Frame):
     ''' Group of vertically oriented sliders connected by a single callback
@@ -693,7 +693,7 @@ class VerticalSliderGroup(Frame):
 
     def get(self) -> dict:
         '''returns dictionary with current value of each slider'''
-        return [{label:slider.get()} for label, slider in zip(self.labels, self.sliders)]
+        return {label:slider.get() for label, slider in zip(self.labels, self.sliders)}
    
 class PlotScrollBar(Canvas):
     ''' Horizontally oriented plot slider that handles integer values between
