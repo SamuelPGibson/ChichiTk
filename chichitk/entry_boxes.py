@@ -78,13 +78,19 @@ class CheckEntry(Entry):
             if self.__check_function is not None: # this is only here because of the misuse of CheckEntry as a search bar
                 self.__check_function(text)
             return None
-        if (self.allowed_chars and not min([c in self.allowed_chars for c in text])) or (self.max_len and len(text) > self.max_len):
+        if (self.allowed_chars is not None and not min([c in self.allowed_chars for c in text])) or (self.max_len and len(text) > self.max_len):
             cursor_index = self.index('insert')
             # remove character that was just entered
             self.delete(str(cursor_index - 1), str(cursor_index))
             text = super().get() # update text to current text in entry box
         if self.__check_function is not None and not self.__check_function(text):
             self.config(bg=self.error_color)
+
+    def set_allowed_chars(self, allowed_chars:str):
+        '''updates allowed characters in entry box
+        :param allowed_chars: str | list[str] | None
+        '''
+        self.allowed_chars = allowed_chars
 
     def set_bg(self, bg:str):
         '''updates background color'''
