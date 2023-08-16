@@ -263,7 +263,7 @@ class LabelSlider(Frame):
                  slider_color='#ffffff', slider_drag_color=None, hide_slider=False,
                  slider_visible=True, slider_height=20, slider_width=20, slider_type='circle',
                  orientation='h', line_width=2, canvas_height=0, canvas_width=0,
-                 **kwargs):
+                 entry_on_function=None, entry_off_function=None, **kwargs):
         '''
         Parameters
         ----------
@@ -305,6 +305,8 @@ class LabelSlider(Frame):
             :param label_fg: str (hex code) - label text color (if different from text_fg)
             :param label_hover_bg: str (hex code) - label background color when hovering (if different from label_bg)
             :param label_error_color: str (hex code) - background color in entry box for bad text
+            :param entry_on_function: function() - called when user opens entry box
+            :param entry_of_function: function() - called when user closes entry box
         '''
         if child_frame is None: # dont need to init Frame if nothing is being put in it
             super().__init__(master, bg=bg, **kwargs)
@@ -334,6 +336,8 @@ class LabelSlider(Frame):
                                      editable=label_editable, justify=label_justify,
                                      bg=label_bg, fg=label_fg, hover_bg=label_hover_bg,
                                      error_color=label_error_color,
+                                     entry_on_function=entry_on_function,
+                                     entry_off_function=entry_off_function,
                                      font_name=font_name, font_size=font_size)
         
         # Static Text Label
