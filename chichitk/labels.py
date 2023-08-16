@@ -233,7 +233,7 @@ class NumberEditLabel(EditLabel):
         input text is guaranteed to contain only numbers and '.' if return_type
         is float
         '''
-        if text == '':
+        if text in ['', '-', '.']:
             return False
         if text[0] == '.' or text[-1] == '.' or text.count('.') > 1: # improperly formatted number
             return False
