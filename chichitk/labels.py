@@ -101,6 +101,12 @@ class EditLabel(Frame):
         self.config(bg=self.bg)
         self.Entry.set_bg(self.bg)
 
+    def set_allowed_chars(self, allowed_chars:str):
+        '''updates characters allowed in entry box
+        :param allowed_chars: str | list[str] | None
+        '''
+        self.Entry.set_allowed_chars(allowed_chars)
+
     def hover_enter(self, event=None):
         if self.editable:
             self.label.config(bg=self.hover_bg)
@@ -179,8 +185,6 @@ class NumberEditLabel(EditLabel):
         NumberEditLabel is an excellent compact solution when there is not room
         to display a scrollbar or slider for the user to adjust numeric values.
     '''
-    allowed_chars = '0123456789'
-
     def __init__(self, master, callback=None, min_value=0, max_value=100,
                  step=1, default_value=None, reference_width=2.0, max_len=None,
                  drag_threshold=0.2, draggable=True, **kwargs):
@@ -204,17 +208,18 @@ class NumberEditLabel(EditLabel):
         else:
             self._decimals = len(str(self._step).split(".")[1])
         default_value = default_value if default_value is not None else min_value
-        allowed_chars = self.allowed_chars + '.' * (self._decimals > 0)
         
         super().__init__(master, self._get_text(default_value),
-                         callback=self._entry_update, allowed_chars=allowed_chars,
-                         max_len=max_len, check_function=self._check_function, **kwargs)
+                         callback=self._entry_update, max_len=max_len,
+                         check_function=self._check_function, **kwargs)
         
         self._callback_function = callback
         self._min_value, self._max_value = min_value, max_value
         self._values = np.arange(self._min_value, self._max_value + self._step * 0.9, self._step)
         self._drag_threshold = drag_threshold
         self._reference_width = reference_width
+
+        self._update_allowed_chars()
 
         if draggable:
             self.label.config(cursor='sb_h_double_arrow')
@@ -231,6 +236,8 @@ class NumberEditLabel(EditLabel):
         if text == '':
             return False
         if text[0] == '.' or text[-1] == '.' or text.count('.') > 1: # improperly formatted number
+            return False
+        if text.count('-') > 1 or ('-' in text and text[0] != '-'): # improperly formatted negative number
             return False
         value = float(text)
         if value < self._min_value or value > self._max_value: # out of range
@@ -286,6 +293,17 @@ class NumberEditLabel(EditLabel):
         if self._callback_function is not None:
             self._callback_function(self.get())
 
+    def _update_allowed_chars(self):
+        '''called internally to update allowed characters in entry box
+        when limits or decimals change (limits may include negative numbers)
+        '''
+        allowed_chars = '0123456789'
+        if self._decimals > 0:
+            allowed_chars += '.'
+        if self._min_value < 0: # include negative numbers
+            allowed_chars += '-'
+        super().set_allowed_chars(allowed_chars)
+
     def set_min_value(self, min_value:int, force_limits=True):
         '''sets minimum value - must be less than current maximum value
         if force_limits is True, changes value and max value if necessary'''
@@ -295,6 +313,7 @@ class NumberEditLabel(EditLabel):
                 self.set(min_value, force_limits=False)
         self._min_value = min_value
         self._values = np.arange(self._min_value, self._max_value + self._step * 0.9, self._step)
+        self._update_allowed_chars()
 
     def set_max_value(self, max_value:int, force_limits=True):
         '''sets maximum value - must be greater than current minimum value
@@ -305,6 +324,7 @@ class NumberEditLabel(EditLabel):
                 self.set(max_value, force_limits=False)
         self._max_value = max_value
         self._values = np.arange(self._min_value, self._max_value + self._step * 0.9, self._step)
+        self._update_allowed_chars()
 
     def get_min_value(self) -> int:
         '''returns current minimum value'''
@@ -334,6 +354,7 @@ class NumberEditLabel(EditLabel):
             self._min_value = min(self._min_value, value)
             self._max_value = max(self._max_value, value)
         super().set_text(self._get_text(value))
+        self._update_allowed_chars()
 
     def get(self) -> int:
         '''
