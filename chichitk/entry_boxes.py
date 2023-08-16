@@ -10,7 +10,8 @@ class CheckEntry(Entry):
                  bg:str='#ffffff', fg:str='#000000', disabled_bg=None,
                  disabled_fg=None, error_color='#ff0000', width=0,
                  font_name='Segoe UI', font_size=10, editable=True,
-                 hide_char=None, select_first=False, focus_first=False, **kwargs):
+                 hide_char=None, select_first=False, focus_first=False,
+                 entry_on_function=None, entry_off_function=None, **kwargs):
         '''entry box to check text as it is entered
         
         Parameters
@@ -33,6 +34,8 @@ class CheckEntry(Entry):
                                           - example: '*' for password entry
             :param select_first: bool - if True, will select text upon initiation
             :param focus_first: bool - if True will focus CheckEntry upon initiation
+            :param entry_on_function: function (event) - called with focus on
+            :param entry_off_function: function (event) - called with focus off
         '''
         self.allowed_chars = allowed_chars
         self.max_len = max_len
@@ -52,6 +55,10 @@ class CheckEntry(Entry):
                        justify=justify, highlightthickness=0, borderwidth=0,
                        state='normal' if editable else 'disabled', show=hide_char,
                        **kwargs)
+        if entry_on_function is not None:
+            self.bind('<FocusIn>', entry_on_function)
+        if entry_off_function is not None:
+            self.bind('<FocusOut>', entry_off_function)
         if self.__exit_function is not None:
             for tag in ['<Return>', '<Tab>', '<FocusOut>']:
                 self.bind(tag, self.exit)
