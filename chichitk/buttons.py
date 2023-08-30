@@ -155,11 +155,12 @@ class BaseButton(Frame):
             if self.active:
                 self.config_colors()
             
-    def click_button(self, event=None):
+    def click_button(self, event=None, callback=True):
         if self.active:
             if self.popup_labels[0] and self.click_popup:
                 self.tool_tip.set_text(self.click_popup)
-            self.click_command()
+            if callback:
+                self.click_command()
             if self.select_on_click:
                 self.select()
 
@@ -431,7 +432,7 @@ class CheckButton(DoubleIconButton):
                                   popup_label1=inactive_popup_label,
                                   popup_label2=active_popup_label, **kwargs)
         if active:
-            self.Button1.click_button()
+            self.Button1.click_button(callback=False)
 
     def select(self):
         '''select check button without calling callback command'''
