@@ -432,7 +432,7 @@ class CheckButton(DoubleIconButton):
                                   popup_label1=inactive_popup_label,
                                   popup_label2=active_popup_label, **kwargs)
         if active:
-            self.Button1.click_button(callback=False)
+            self.switch2()
 
     def select(self):
         '''select check button without calling callback command'''
