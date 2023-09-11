@@ -549,23 +549,27 @@ class ToggleButtonGroup(Frame):
             button.pack(side=pack_side, padx=buttons_padx, pady=buttons_pady, fill='both')
             self.__buttons.append(button)
 
-    def __callback(self, active:bool, button_index:int):
+    def __callback(self, active:bool, button_index:int, callback=True):
         '''called when the ith button is clicked'''
         if active: # callback and deactivate all other buttons
             for i, button in enumerate(self.__buttons):
                 if i == button_index: # callback for clicked button
-                    self.__on_callback(i)
+                    if callback:
+                        self.__on_callback(i)
                 else: # deactivate other buttons
                     button.deselect()
-                    self.__off_callback(i)
-            if self.__selection_callback is not None:
+                    if callback:
+                        self.__off_callback(i)
+            if self.__selection_callback is not None and callback:
                 self.__selection_callback(button_index)
         else: # off callback for clicked button
-            self.__off_callback(button_index)
+            if callback:
+                self.__off_callback(button_index)
             if self.__always_selected: # select default button
                 self.__buttons[self.__default_index].select()
-                self.__on_callback(self.__default_index)
-                if self.__selection_callback is not None:
+                if callback:
+                    self.__on_callback(self.__default_index)
+                if self.__selection_callback is not None and callback:
                     self.__selection_callback(button_index)
 
     def __on_callback(self, i:int):
@@ -585,6 +589,13 @@ class ToggleButtonGroup(Frame):
     def click(self, button_index:int):
         '''clicks the specified button'''
         self.__buttons[button_index].click_button()
+
+    def set(self, set_index:int):
+        '''selects button with the given index and deselects all others - no callback'''
+        self.__buttons[set_index].select()
+        for i, button in enumerate(self.__buttons): # deselect other buttons
+            if i != set_index:
+                button.deselect()
 
     def get(self) -> list:
         '''returns list of booleans indicating selection status of each button'''
