@@ -276,7 +276,8 @@ class ToggleIconButton(IconButton):
     ''' Toggle version of IconButton. The callback command is given a boolean
         parameter which indicates whether the button is being turned on or off.
     '''
-    def __init__(self, master, icon_path:str, command=None, label:str='', bar_height:int=3, **kwargs):
+    def __init__(self, master, icon_path:str, command=None, label:str='',
+                 bar_height:int=3, **kwargs):
         '''Toggle version of IconButton
         
             :param command: 1 argument function (bool) - True for turn on, False for turn off
@@ -510,8 +511,9 @@ class ToggleButtonGroup(Frame):
         group and call their respective off callback functions
     '''
     def __init__(self, master:Frame, button_info:list, callback=None,
-                 always_selected=False, default_index=0, orientation:str='h',
-                 bg='#ffffff', buttons_padx=0, buttons_pady=0, **kwargs):
+                 deselectable=False, always_selected=False, default_index=0,
+                 orientation:str='h', bg='#ffffff', buttons_padx=0, buttons_pady=0,
+                 **kwargs):
         '''
         Parameters
         ----------
@@ -523,6 +525,7 @@ class ToggleButtonGroup(Frame):
                 label: str - button label (optional)
                 popup_label: str - button popup label (optional)
             :param callback: function(clicked_index) - called when a button is clicked
+            :param deselectable: bool - if True, buttons can be deselected by clicking
             :param always_selected: bool - if True, exactly one button will always be selected
             :param default_index: int - index of default button to be selected
         '''
@@ -530,6 +533,7 @@ class ToggleButtonGroup(Frame):
         super().__init__(master, bg=bg)
         self.__button_info = button_info
         self.__selection_callback = callback
+        self.__deselectable = deselectable
         self.__always_selected = always_selected
         self.__default_index = default_index
 
@@ -551,7 +555,9 @@ class ToggleButtonGroup(Frame):
 
     def __callback(self, active:bool, button_index:int, callback=True):
         '''called when the ith button is clicked'''
-        if active: # callback and deactivate all other buttons
+        if not active and not self.__deselectable: # disallow deselection
+            self.__buttons[button_index].select() # select button that was just deselected
+        elif active: # callback and deactivate all other buttons
             for i, button in enumerate(self.__buttons):
                 if i == button_index: # callback for clicked button
                     if callback:
