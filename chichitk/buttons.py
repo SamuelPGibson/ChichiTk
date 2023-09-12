@@ -529,7 +529,7 @@ class ToggleButtonGroup(Frame):
             :param always_selected: bool - if True, exactly one button will always be selected
             :param default_index: int - index of default button to be selected
         '''
-        assert orientation in ['h', 'v'], f'ToggleIconButtonGroup Error: Invalid orientation: {orientation}'
+        assert orientation in ['h', 'v'], f'ToggleButtonGroup Error: Invalid orientation: {orientation}'
         super().__init__(master, bg=bg)
         self.__button_info = button_info
         self.__selection_callback = callback
@@ -606,6 +606,113 @@ class ToggleButtonGroup(Frame):
     def get(self) -> list:
         '''returns list of booleans indicating selection status of each button'''
         return [button.get() for button in self.__buttons]
+
+class CheckButtonGroup(Frame):
+    ''' Group of CheckButtons where any, none, or all can be selected
+
+        get() returns list of labels of buttons that are selected
+    
+        CheckButtons can be arranged horizontally, vertically, or in rows and
+        columns
+
+        Columns are considered preferentially if rows and columns are defined
+    '''
+    def __init__(self, master:Frame, labels:list, callback=None, bg:str='#ffffff',
+                 orientation:str='h', rows=None, columns=None, selected_labels=None,
+                 buttons_padx=0, buttons_pady=0, bottom_pady=10, **kwargs):
+        '''
+        Parameters
+        ----------
+            :param master: tk.Frame - parent widget
+            :param labels: list[str] - button labels
+            :param callback: function(list[str]) - called when selections are changed
+            :param bg: str (hex code) - background color
+            :param orientation: str Literal['h', 'v'] - horizontal or vertical pack
+            :param rows: int or None - number of rows in grid
+            :param columns: int or None - number of columns in grid
+            :param selected_labels: list[str] - labels to be intially selected
+            **kwargs are passed to all CheckButtons
+        '''
+        assert orientation in ['h', 'v'], f'CheckButtonGroup Error: Invalid orientation: {orientation}'
+        super().__init__(master, bg=bg)
+        self.__buttons: list[CheckButton] = []
+        self.__callback = callback
+
+        pack_side = 'left' if orientation == 'h' else 'top'
+
+        buttons_frame = Frame(self, bg=bg)
+        buttons_frame.pack(side='top', fill='both', expand=True)
+
+        # Grid Configure
+        if columns is not None:
+            buttons_frame.grid_columnconfigure(tuple(range(columns)), weight=1)
+        if rows is not None:
+            buttons_frame.grid_columnconfigure(tuple(range(rows)), weight=1)
+
+        # Create Buttons
+        for i, label in enumerate(labels):
+            button = CheckButton(buttons_frame, self.__click, label=label,
+                                 active=False, **kwargs)
+            self.__buttons.append(button)
+            if columns is not None: # grid a row at a time
+                row = i // columns
+                column = i % columns
+                button.grid(row=row, column=column, padx=buttons_padx,
+                            pady=buttons_pady, sticky='nsew')
+            elif rows is not None: # grid a column at a time
+                row = i % rows
+                column = i // rows
+                button.grid(row=row, column=column, padx=buttons_padx,
+                            pady=buttons_pady, sticky='nsew')
+            else: # pack according to orientation
+                button.pack(side=pack_side, fill='both', expand=True,
+                            padx=buttons_padx, pady=buttons_pady)
+                
+        # Buttons to Select/Deselect All
+        bottom_frame = Frame(self, bg=bg)
+        bottom_frame.pack(side='bottom', fill='x', pady=bottom_pady)
+        bkwargs = dict(bar_height=0, inactive_bg=bg, selectable=False)
+        deselect_button = IconButton(bottom_frame, icons['box'], self.deselect_all,
+                                     label='None', **bkwargs)
+        deselect_button.pack(side='left', fill='x', expand=True)
+        select_button = IconButton(bottom_frame, icons['checkbox'], self.select_all,
+                                   label='All', **bkwargs)
+        select_button.pack(side='right', fill='x', expand=True)
+
+        # Set Initial Selections
+        if selected_labels is not None:
+            self.set(selected_labels)
+
+    def __click(self, status:bool):
+        '''called when any CheckButton is clicked'''
+        if self.__callback is not None:
+            self.__callback(self.get())
+
+    def select_all(self):
+        '''selects all buttons'''
+        for button in self.__buttons:
+            button.select()
+        if self.__callback is not None:
+            self.__callback(self.get())
+
+    def deselect_all(self):
+        '''deselects all buttons'''
+        for button in self.__buttons:
+            button.deselect()
+        if self.__callback is not None:
+            self.__callback(self.get())
+
+    def set(self, labels:list):
+        '''selects the given labels and deselects all others'''
+        for button in self.__buttons:
+            if button.get_label() in labels:
+                button.select()
+            else:
+                button.deselect()
+
+    def get(self) -> list:
+        '''returns list of labels for all selected buttons'''
+        return [b.get_label() for b in self.__buttons if b.get()]
 
 class PlayerButtons(Frame):
     ''' Collection of IconButtons for controlling the playback of music, a
