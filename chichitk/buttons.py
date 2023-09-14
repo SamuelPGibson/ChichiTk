@@ -603,6 +603,14 @@ class ToggleButtonGroup(Frame):
             if i != set_index:
                 button.deselect()
 
+    def get_label(self) -> str:
+        '''returns the label of the button that is currently selected
+        If none are selected, returns None - only possible when always_selected is False
+        '''
+        for button in self.__buttons:
+            if button.get():
+                return button.get_label()
+
     def get(self) -> list:
         '''returns list of booleans indicating selection status of each button'''
         return [button.get() for button in self.__buttons]
