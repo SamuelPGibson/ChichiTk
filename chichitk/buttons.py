@@ -481,6 +481,10 @@ class LabelButton(BaseButton):
         '''returns label text'''
         return self.label_text
 
+    def get_label(self):
+        '''duplicates get_text() for compatibility'''
+        return self.get_text()
+
 class ToggleLabelButton(LabelButton):
     ''' Extension of LabelButton that passes a boolean argument to callback
         command to indicate whether buttons is being selected or deselected.
