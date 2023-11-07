@@ -130,6 +130,20 @@ class LeftFrame(Frame):
         for i in range(4):
             frame.grid_rowconfigure(i, weight=1)
 
+        # put dropdown menu here
+        dropdown_parameters = [
+            {'label':'Play', 'icon':icons['play'], 'selected':True},
+            {'label':'Pause', 'icon':icons['pause'], 'selected':False},
+            {'label':'Loop', 'icon':icons['loop'], 'selected':False},
+            {'label':'Skip', 'icon':icons['skip_forward'], 'selected':True},
+        ]
+        dropdown_button = chichitk.LabelDropdown(collapse_frame.header, dropdown_parameters,
+                                                 print, popup_label='Dropdown Menu',
+                                                 bg=colors[0], label_active_bg='#444444')
+        dropdown_button.pack(side='left')
+        collapse_frame.label.pack_forget()
+        collapse_frame.label.pack(side='top') # so menu button appears beside label
+
         for i, label in enumerate(['Check Label', 'Dropdown', 'Check Entry',
                                    'Color Entry', 'Upload File', 'Time Label',
                                    'Range Labels', 'Slider']):
@@ -246,7 +260,7 @@ app.title('ChichiTk Example App')
 app.config(bg=colors[0])
 sw, sh = app.winfo_screenwidth(), app.winfo_screenheight()
 w, h = int(sw * 0.9), int(sh * 0.7)
-app.geometry(f'{w}x{h}+{sw // 2 - w // 2}+{sh // 2 - h // 2}')
+app.geometry(f'{w}x{h}+{sw // 2 - w // 2}+{sh // 2 - h // 2 - 100}')
 
 Footer(app, '#121215').pack(side='bottom', fill='x')
 Header(app, '#121215').pack(side='top', fill='x')
