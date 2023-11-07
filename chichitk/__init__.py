@@ -9,6 +9,7 @@ from .entry_boxes import *
 from .file_dialog import *
 from .function_progress import *
 from .icon_labels import *
+from .label_dropdown import *
 from .labels import *
 from .pdf_display import PdfDisplay
 from .player import *
@@ -19,6 +20,7 @@ from .temp_label import *
 from .temp_menu import *
 from .text_boxes import *
 from .timer import *
+from .tool_frame import *
 from .tool_tip import *
 
 # not importing from .canvas_items because these are not intended
