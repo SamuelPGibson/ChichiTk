@@ -181,9 +181,13 @@ class BaseButton(Frame):
             self.selected = False
             self.config_colors()
 
-    def get(self):
+    def get(self) -> bool:
         '''returns True if button is selected, otherwise False'''
         return self.selected
+
+    def is_hovering(self) -> bool:
+        '''returns True if cursor is hovering on button, otherwise False'''
+        return self.hovering
 
 class IconButton(BaseButton):
     ''' Extension of BaseButton with an icon besode the label. The label can
