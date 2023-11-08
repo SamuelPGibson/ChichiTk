@@ -17,7 +17,7 @@ class EditLabel(Frame):
     '''
     def __init__(self, master:Frame, text:str, bg:str='#ffffff', fg:str='#000000',
                  hover_bg:str='#cccccc', error_color='#ff0000', callback=None,
-                 allowed_chars=None, max_len=None, check_function=None,
+                 allowed_chars=None, max_len=None, check_function=None, display_function=None,
                  editable=True, justify='left', focus_out_bind=True, hover_bind=True,
                  hover_enter_function=None, hover_leave_function=None,
                  entry_on_function=None, entry_off_function=None,
@@ -35,8 +35,10 @@ class EditLabel(Frame):
             :param callback: function (str) - called when label is edited by user
             :param allowed_chars: str or list of str - characters the can be entered
             :param max_len: int - maximum number of characters in box
-            :param check_function: function (str) -> bool - called as text is entered
+            :param check_function: function(str) -> bool - called as text is entered
                                                           - if False, changes to error color
+            :param display_function: function(str) -> str - alternate text display for label
+                            - does not affect text in entry field or text returned by get()
             :param hover_enter_function: function () - called when cursor enters label
             :param hover_leave_function: function () - called when cursor leaves label
             :param entry_on_function: function () - called with self.to_entry
@@ -51,6 +53,7 @@ class EditLabel(Frame):
         self.editable = editable
         self.dragging = False
         self.check_function = check_function
+        self.display_function = display_function if display_function is not None else lambda s: s
         self.hover_enter_function = hover_enter_function
         self.hover_leave_function = hover_leave_function
         self.entry_on_function = entry_on_function
@@ -59,7 +62,8 @@ class EditLabel(Frame):
 
         Frame.__init__(self, master, bg=bg)
         
-        self.label = Label(self, text=self.text, bg=bg, fg=fg, font=(font_name, font_size))
+        self.label = Label(self, text=self.display_function(self.text),
+                           bg=bg, fg=fg, font=(font_name, font_size))
         self.label.pack(fill='both')
         self.Entry = CheckEntry(self, default=self.text, allowed_chars=allowed_chars,
                                 max_len=max_len, check_function=self._entry_check_callback,
@@ -88,7 +92,7 @@ class EditLabel(Frame):
         self.label.focus_set() # to take focus away from Entry so that keyboard strokes are no longer read by Entry
         self.label.pack(fill='both')
         self.text = text
-        self.label.config(text=self.text)
+        self.label.config(text=self.display_function(self.text))
         self.Entry.activate(text=text, select=False, focus=False) # only to set text in entry box
         if callback and self.callback:
             self.callback(text)
@@ -150,13 +154,18 @@ class EditLabel(Frame):
             if self._entry_check_callback(self.Entry.get()): # only if text in Entry is good
                 if self.Entry.get() != self.text: # only callback if text has changed
                     self.text = self.Entry.get()
-                    self.label.config(text=self.text)
+                    self.label.config(text=self.display_function(self.text))
                     if callback and self.callback:
                         self.callback(self.text)
             if self.entry_off_function:
                 self.entry_off_function()
 
-    def get(self) -> str:
+    def get_text(self) -> str:
+        '''should not be overriden'''
+        return self.text
+
+    def get(self):
+        '''can be overriden in child classes to return other types'''
         return self.text
 
 class NumberEditLabel(EditLabel):
