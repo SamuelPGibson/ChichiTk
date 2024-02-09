@@ -268,7 +268,7 @@ class KeyDropDown(OptionMenu):
         '''called when key is changed by user by clicking dropdown menu'''
         self.set(x)
         if self._callback:
-            self._callback(self.get_text())
+            self._callback(self.get())
 
     def set_key(self, new_key:str, callback=False):
         '''set the key - called externally to KeyDropDown class
@@ -285,7 +285,7 @@ class KeyDropDown(OptionMenu):
                 break
         self.set(key_name)
         if callback and self._callback:
-            self._callback(self.get_text())
+            self._callback(self.get())
 
     def get(self) -> str:
         '''returns key in lilypond format such as "ais" or "des" or "b"'''
