@@ -621,6 +621,7 @@ class ScrollBar(Canvas):
     def set_marker_value(self, marker_id:str, value:float):
         '''updates value of specified marker'''
         assert marker_id in self.__markers.keys(), f'ScrollBar Error: marker_id does not exist: {marker_id}'
+        self.__markers[marker_id]['value'] = value
         self.coords(self.__markers[marker_id]['id'], *self.__get_marker_coords(value))
 
     def set_marker_color(self, marker_id:str, color:str):
