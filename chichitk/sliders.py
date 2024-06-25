@@ -497,6 +497,9 @@ class ScrollBar(Canvas):
         self.__slider_hover_color = slider_hover_color if slider_hover_color is not None else self.__slider_color
         self.__slider_drag_color = slider_drag_color if slider_drag_color is not None else self.__slider_hover_color
 
+        # {marker_id: {'id':canvas_id, 'value':value}}
+        self.__markers = {}
+
         self.__slider_id = self.create_rectangle(0, 0, 0, 0, fill=self.__slider_color,
                                                  width=0, state='normal')
         
@@ -522,11 +525,32 @@ class ScrollBar(Canvas):
             x0, x1 = 0, w
             y0, y1 = self.__p0 * h, self.__p1 * h
         self.coords(self.__slider_id, x0, y0, x1, y1)
+        for marker in self.__markers.values():
+            self.coords(marker['id'], *self.__get_marker_coords(marker['value'], h=h, w=w))
         if self.__disappear_when_filled and self.__p0 < filled_thresh and self.__p1 > 1 - filled_thresh:
             self.itemconfig(self.__slider_id, state='hidden')
         else:
             self.itemconfig(self.__slider_id, state='normal')
+
+    def __get_marker_coords(self, value:float, h:int=None, w:int=None):
+        '''returns (x0, y0, x1, y1) coordinates for the given marker value
+            between 0 and 1
+            Optionally pass canvas height, h and width, w to avoid recomputing
+        '''
+        if h is None:
+            h = self.winfo_height()
+        if w is None:
+            w = self.winfo_width()
+        if self.__orientation == 'h': # horizontal
+            y0, y1 = 0, h
+            x = value * w
+            return x, y0, x, y1
+        elif self.__orientation == 'v': # vertical
+            x0, x1 = 0, w
+            y = value * h
+            return x0, y, x1, y
     
+    # Cursor Callbacks
     def __hover_enter(self, event=None):
         '''cursor enters canvas'''
         self.itemconfig(self.__slider_id, fill=self.__slider_hover_color)
@@ -570,6 +594,7 @@ class ScrollBar(Canvas):
         if self.__callback is not None:
             self.__callback(self.__p0, self.__p1)
 
+    # Interface
     def set(self, p0:float, p1:float):
         '''sets slider value - must be between 0 and 1 (does not call callback function)'''
         assert p0 >= 0 and p0 <= 1, f'ScrollBar Error: set lower bound to invalid value: {p0}'
@@ -582,6 +607,32 @@ class ScrollBar(Canvas):
         '''returns current slider value'''
         return self.__p0, self.__p1
 
+    def add_marker(self, marker_id:str, value:float, color:str='#ffffff',
+                   line_width:int=1):
+        '''add marker line to ScrollBar'''
+        assert value >= 0 and value <= 1, f'ScrollBar Error: Invalid marker value: {value}. Must be between 0 and 1'
+        assert marker_id not in self.__markers.keys(), f'ScrollBar Error: marker_id already exists: {marker_id}'
+
+        line_id = self.create_line(*self.__get_marker_coords(value), fill=color,
+                                   width=line_width, state='disabled')
+        
+        self.__markers[marker_id] = {'id':line_id, 'value':value}
+
+    def set_marker_value(self, marker_id:str, value:float):
+        '''updates value of specified marker'''
+        assert marker_id in self.__markers.keys(), f'ScrollBar Error: marker_id does not exist: {marker_id}'
+        self.coords(self.__markers[marker_id]['id'], *self.__get_marker_coords(value))
+
+    def set_marker_color(self, marker_id:str, color:str):
+        '''updates color of specified marker'''
+        assert marker_id in self.__markers.keys(), f'ScrollBar Error: marker_id does not exist: {marker_id}'
+        self.itemconfig(self.__markers[marker_id]['id'], fill=color)
+
+    def delete_marker(self, marker_id:str):
+        '''deletes specified marker'''
+        assert marker_id in self.__markers.keys(), f'ScrollBar Error: trying to delete marker_id that does not exist: {marker_id}'
+        self.delete(self.__markers[marker_id]['id'])
+        del self.__markers[marker_id]
 
 class HorizontalSliderGroup(Frame):
     ''' Group of horizontally oriented sliders connected by a single callback
