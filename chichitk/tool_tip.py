@@ -61,7 +61,9 @@ class ToolTip(Toplevel):
         target.bind('<Enter>', lambda e: self.fadein(0, text, e))
         target.bind('<Leave>', lambda e: self.fadeout(1 - self.__fade_inc, e))
 
-    def fadein(self, alpha:float, text:str=None, event:Event=None):
+    def fadein(self, alpha:float, text:str=None, event:Event=None,
+               widget_pos:'tuple[int]'=None):
+        ''':param widget_pos: tuple[int] - (width, height, x, y)'''
         #if event and text then this call came from target
         #~ we can consider this a "fresh/new" call
         if event is not None and text is not None:
@@ -73,10 +75,13 @@ class ToolTip(Toplevel):
             self.update() # update so the proceeding geometry will be correct
 
             # check widget position (widget that calls tool_tip popup such as button or label)
-            widget_width = event.widget.winfo_width()
-            widget_height = event.widget.winfo_height()
-            widget_x = event.widget.winfo_rootx()
-            widget_y = event.widget.winfo_rooty()
+            if widget_pos is not None:
+                widget_width, widget_height, widget_x, widget_y = widget_pos
+            else:
+                widget_width = event.widget.winfo_width()
+                widget_height = event.widget.winfo_height()
+                widget_x = event.widget.winfo_rootx()
+                widget_y = event.widget.winfo_rooty()
 
             # compute popup geometry
             w = self.label.winfo_width()
