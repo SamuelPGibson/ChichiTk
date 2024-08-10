@@ -70,7 +70,8 @@ class ToolTip(Toplevel):
             if self.fout: # if we are in the middle of fading out jump to end of fade
                 self.attributes('-alpha', 0)
                 self.fout = False # indicate that we are fading in
-            text = add_line_breaks(text, self.__chars_per_line, replace_char=' \n ') # to pad each line with space
+            if '\n' not in text: # if so, assume line breaks have already been done
+                text = add_line_breaks(text, self.__chars_per_line, replace_char=' \n ') # to pad each line with space
             self.label.configure(text=f'{text:^{len(text)+2}}') # pad with a space on either side
             self.update() # update so the proceeding geometry will be correct
 
@@ -135,7 +136,8 @@ class ToolTip(Toplevel):
     def set_text(self, text:str):
         '''sets popup text - to be called while popup is visible
         for example, when a button is clicked'''
-        text = add_line_breaks(text, self.__chars_per_line, replace_char=' \n ') # to pad each line with space
+        if '\n' not in text: # if so, assume line breaks have already been done
+            text = add_line_breaks(text, self.__chars_per_line, replace_char=' \n ') # to pad each line with space
         self.label.configure(text=f'{text:^{len(text)+2}}') # pad with a space on either side
         #update so the proceeding geometry will be correct
         self.update()
