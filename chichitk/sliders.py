@@ -464,7 +464,7 @@ class ScrollBar(Canvas):
                  bg:str='#ffffff', slider_color:str='#000000',
                  slider_hover_color=None, slider_drag_color=None,
                  width=None, height=None, orientation='h',
-                 disappear_when_filled=True):
+                 disappear_when_filled=True, closeenough=1):
         '''
         Parameters
         ----------
@@ -486,7 +486,8 @@ class ScrollBar(Canvas):
         assert default0 >= 0 and default0 <= 1, f'ScrollBar Error: Default0 out of range: {default0}'
         assert default1 >= 0 and default1 <= 1, f'ScrollBar Error: Default1 out of range: {default1}'
 
-        super().__init__(master, bg=bg, width=width, height=height, highlightthickness=0)
+        super().__init__(master, bg=bg, width=width, height=height,
+                         highlightthickness=0, closeenough=closeenough)
 
         self.__dragging = False
         self.__callback = callback
